@@ -24,9 +24,9 @@ import {
 } from "react-native";
 
 // Web用のフォント設定をシンプルに
-const webFontFamily = Platform.OS === 'web' 
+const webFontFamily = Platform.OS === "web"
     ? {
-        fontFamily: 'system-ui, -apple-system, sans-serif'
+        fontFamily: "system-ui, -apple-system, sans-serif",
     }
     : {};
 
@@ -206,265 +206,294 @@ export default function BeforeTheHoneymoon() {
                 style={styles.scrollContainer}
                 contentContainerStyle={styles.contentContainer}
             >
-            <View style={styles.inner}>
-                {/* ヘッダー */}
-                <View style={styles.header}>
-                    <Text style={styles.title}>Before the honeymoon</Text>
-                    <Text style={styles.subtitle}>
-                        海外で理想のフォトグラファーを見つけよう
-                    </Text>
-                </View>
+                <View style={styles.inner}>
+                    {/* ヘッダー */}
+                    <View style={styles.header}>
+                        <Text style={styles.title}>Before the honeymoon</Text>
+                        <Text style={styles.subtitle}>
+                            海外で理想のフォトグラファーを見つけよう
+                        </Text>
+                    </View>
 
-                {!searchResults
-                    ? (
-                        // 検索フォーム
-                        <View style={styles.formBox}>
-                            {/* 行き先入力 */}
-                            <View style={styles.inputBlock}>
-                                <View style={styles.labelRow}>
-                                    <MapPin
-                                        size={20}
-                                        color="#a855f7"
-                                        style={styles.icon}
+                    {!searchResults
+                        ? (
+                            // 検索フォーム
+                            <View style={styles.formBox}>
+                                {/* 行き先入力 */}
+                                <View style={styles.inputBlock}>
+                                    <View style={styles.labelRow}>
+                                        <MapPin
+                                            size={20}
+                                            color="#a855f7"
+                                            style={styles.icon}
+                                        />
+                                        <Text style={styles.label}>行き先</Text>
+                                    </View>
+                                    <TextInput
+                                        placeholder="例: パリ、グアム、バリ島"
+                                        value={destination}
+                                        onChangeText={setDestination}
+                                        style={styles.input}
+                                        placeholderTextColor="#aaa"
                                     />
-                                    <Text style={styles.label}>行き先</Text>
                                 </View>
-                                <TextInput
-                                    placeholder="例: パリ、グアム、バリ島"
-                                    value={destination}
-                                    onChangeText={setDestination}
-                                    style={styles.input}
-                                    placeholderTextColor="#aaa"
-                                />
-                            </View>
 
-                            {/* 言語選択 */}
-                            <View style={styles.inputBlock}>
-                                <View style={styles.labelRow}>
-                                    <User
-                                        size={20}
-                                        color="#a855f7"
-                                        style={styles.icon}
-                                    />
-                                    <Text style={styles.label}>
-                                        希望する言語
-                                    </Text>
+                                {/* 言語選択 */}
+                                <View style={styles.inputBlock}>
+                                    <View style={styles.labelRow}>
+                                        <User
+                                            size={20}
+                                            color="#a855f7"
+                                            style={styles.icon}
+                                        />
+                                        <Text style={styles.label}>
+                                            希望する言語
+                                        </Text>
+                                    </View>
+                                    <TouchableOpacity
+                                        style={styles.pickerButton}
+                                        onPress={() =>
+                                            setShowLanguagePicker(true)}
+                                        activeOpacity={0.8}
+                                    >
+                                        <Text
+                                            style={[
+                                                styles.pickerButtonText,
+                                                !preferredLanguage
+                                                && styles.pickerPlaceholder,
+                                            ]}
+                                        >
+                                            {preferredLanguage
+                                                ? LANGUAGE_OPTIONS.find(lang =>
+                                                    lang.value
+                                                        === preferredLanguage
+                                                )?.label
+                                                : "言語を選択してください"}
+                                        </Text>
+                                    </TouchableOpacity>
                                 </View>
-                                <TouchableOpacity
-                                    style={styles.pickerButton}
-                                    onPress={() => setShowLanguagePicker(true)}
-                                    activeOpacity={0.8}
-                                >
-                                    <Text style={[
-                                        styles.pickerButtonText,
-                                        !preferredLanguage && styles.pickerPlaceholder
-                                    ]}>
-                                        {preferredLanguage 
-                                            ? LANGUAGE_OPTIONS.find(lang => lang.value === preferredLanguage)?.label
-                                            : "言語を選択してください"
-                                        }
-                                    </Text>
-                                </TouchableOpacity>
-                            </View>
 
-                            {/* 画像アップロード */}
-                            <View style={styles.inputBlock}>
-                                <View style={styles.labelRow}>
-                                    <Camera
-                                        size={20}
-                                        color="#a855f7"
-                                        style={styles.icon}
-                                    />
-                                    <Text style={styles.label}>
-                                        参考にしたい写真
-                                    </Text>
-                                </View>
-                                <TouchableOpacity
-                                    style={styles.uploadBox}
-                                    onPress={uploadedImage
-                                        ? () => setUploadedImage(null)
-                                        : handleImageUpload}
-                                    activeOpacity={0.8}
-                                >
-                                    {uploadedImage
-                                        ? (
-                                            <View
-                                                style={{ alignItems: "center" }}
-                                            >
-                                                <Image
-                                                    source={{
-                                                        uri: uploadedImage,
+                                {/* 画像アップロード */}
+                                <View style={styles.inputBlock}>
+                                    <View style={styles.labelRow}>
+                                        <Camera
+                                            size={20}
+                                            color="#a855f7"
+                                            style={styles.icon}
+                                        />
+                                        <Text style={styles.label}>
+                                            参考にしたい写真
+                                        </Text>
+                                    </View>
+                                    <TouchableOpacity
+                                        style={styles.uploadBox}
+                                        onPress={uploadedImage
+                                            ? () => setUploadedImage(null)
+                                            : handleImageUpload}
+                                        activeOpacity={0.8}
+                                    >
+                                        {uploadedImage
+                                            ? (
+                                                <View
+                                                    style={{
+                                                        alignItems: "center",
                                                     }}
-                                                    style={styles.uploadedImage}
-                                                />
-                                                <Text style={styles.deleteText}>
-                                                    画像を削除
-                                                </Text>
-                                            </View>
-                                        )
+                                                >
+                                                    <Image
+                                                        source={{
+                                                            uri: uploadedImage,
+                                                        }}
+                                                        style={styles
+                                                            .uploadedImage}
+                                                    />
+                                                    <Text
+                                                        style={styles
+                                                            .deleteText}
+                                                    >
+                                                        画像を削除
+                                                    </Text>
+                                                </View>
+                                            )
+                                            : (
+                                                <View
+                                                    style={{
+                                                        alignItems: "center",
+                                                    }}
+                                                >
+                                                    <Upload
+                                                        size={48}
+                                                        color="#aaa"
+                                                    />
+                                                    <Text
+                                                        style={styles
+                                                            .uploadText}
+                                                    >
+                                                        タップして画像をアップロード
+                                                    </Text>
+                                                </View>
+                                            )}
+                                    </TouchableOpacity>
+                                </View>
+
+                                {/* 検索ボタン */}
+                                <TouchableOpacity
+                                    onPress={handleSearch}
+                                    disabled={isSearching}
+                                    style={[
+                                        styles.searchButton,
+                                        isSearching
+                                        && { backgroundColor: "#ddd" },
+                                    ]}
+                                    activeOpacity={0.8}
+                                >
+                                    {isSearching
+                                        ? <ActivityIndicator color="#fff" />
                                         : (
                                             <View
-                                                style={{ alignItems: "center" }}
+                                                style={styles
+                                                    .searchButtonContent}
                                             >
-                                                <Upload
-                                                    size={48}
-                                                    color="#aaa"
+                                                <Search
+                                                    size={20}
+                                                    color="#fff"
                                                 />
-                                                <Text style={styles.uploadText}>
-                                                    タップして画像をアップロード
+                                                <Text
+                                                    style={styles
+                                                        .searchButtonText}
+                                                >
+                                                    フォトグラファーを探す
                                                 </Text>
                                             </View>
                                         )}
                                 </TouchableOpacity>
                             </View>
+                        )
+                        : (
+                            // 検索結果
+                            <View>
+                                <TouchableOpacity
+                                    onPress={resetSearch}
+                                    style={styles.backButton}
+                                >
+                                    <Text style={styles.backButtonText}>
+                                        ← 検索条件を変更
+                                    </Text>
+                                </TouchableOpacity>
 
-                            {/* 検索ボタン */}
-                            <TouchableOpacity
-                                onPress={handleSearch}
-                                disabled={isSearching}
-                                style={[
-                                    styles.searchButton,
-                                    isSearching && { backgroundColor: "#ddd" },
-                                ]}
-                                activeOpacity={0.8}
-                            >
-                                {isSearching
-                                    ? <ActivityIndicator color="#fff" />
-                                    : (
-                                        <View
-                                            style={styles.searchButtonContent}
-                                        >
-                                            <Search size={20} color="#fff" />
-                                            <Text
-                                                style={styles.searchButtonText}
-                                            >
-                                                フォトグラファーを探す
+                                {error
+                                    ? (
+                                        <View style={styles.errorBox}>
+                                            <Text style={styles.errorText}>
+                                                {error}
                                             </Text>
                                         </View>
-                                    )}
-                            </TouchableOpacity>
-                        </View>
-                    )
-                    : (
-                        // 検索結果
-                        <View>
-                            <TouchableOpacity
-                                onPress={resetSearch}
-                                style={styles.backButton}
-                            >
-                                <Text style={styles.backButtonText}>
-                                    ← 検索条件を変更
-                                </Text>
-                            </TouchableOpacity>
-
-                            {error
-                                ? (
-                                    <View style={styles.errorBox}>
-                                        <Text style={styles.errorText}>
-                                            {error}
-                                        </Text>
-                                    </View>
-                                )
-                                : (
-                                    <View style={styles.resultsContainer}>
-                                        <Text style={styles.resultsTitle}>
-                                            フォトグラファーが見つかりました！
-                                        </Text>
-                                        <Text style={styles.resultsSubtitle}>
-                                            画像をタップしてInstagramを確認
-                                        </Text>
-                                        <View style={styles.imageGrid}>
-                                            {searchResults
-                                                && searchResults.slice(0, 9)
-                                                    .map((
-                                                        item,
-                                                        index,
-                                                    ) => (
-                                                        <TouchableOpacity
-                                                            key={index}
-                                                            style={styles
-                                                                .gridItem}
-                                                            onPress={() =>
-                                                                handleImageClick(
-                                                                    item.instagramUrl,
-                                                                )}
-                                                            activeOpacity={0.8}
-                                                        >
-                                                            <Image
-                                                                source={{
-                                                                    uri: item
-                                                                        .imageUrl,
-                                                                }}
+                                    )
+                                    : (
+                                        <View style={styles.resultsContainer}>
+                                            <Text style={styles.resultsTitle}>
+                                                フォトグラファーが見つかりました！
+                                            </Text>
+                                            <Text
+                                                style={styles.resultsSubtitle}
+                                            >
+                                                画像をタップしてInstagramを確認
+                                            </Text>
+                                            <View style={styles.imageGrid}>
+                                                {searchResults
+                                                    && searchResults.slice(0, 9)
+                                                        .map((
+                                                            item,
+                                                            index,
+                                                        ) => (
+                                                            <TouchableOpacity
+                                                                key={index}
                                                                 style={styles
-                                                                    .gridImage}
-                                                                resizeMode="cover"
-                                                            />
-                                                            <View
-                                                                style={styles
-                                                                    .imageOverlay}
+                                                                    .gridItem}
+                                                                onPress={() =>
+                                                                    handleImageClick(
+                                                                        item.instagramUrl,
+                                                                    )}
+                                                                activeOpacity={0.8}
                                                             >
-                                                                <Instagram
-                                                                    size={24}
-                                                                    color="#fff"
+                                                                <Image
+                                                                    source={{
+                                                                        uri: item
+                                                                            .imageUrl,
+                                                                    }}
+                                                                    style={styles
+                                                                        .gridImage}
+                                                                    resizeMode="cover"
                                                                 />
-                                                            </View>
-                                                        </TouchableOpacity>
-                                                    ))}
+                                                                <View
+                                                                    style={styles
+                                                                        .imageOverlay}
+                                                                >
+                                                                    <Instagram
+                                                                        size={24}
+                                                                        color="#fff"
+                                                                    />
+                                                                </View>
+                                                            </TouchableOpacity>
+                                                        ))}
+                                            </View>
                                         </View>
-                                    </View>
-                                )}
-                        </View>
-                    )}
-            </View>
+                                    )}
+                            </View>
+                        )}
+                </View>
             </ScrollView>
 
             {/* 言語選択モーダル */}
-        <Modal
-            visible={showLanguagePicker}
-            transparent={true}
-            animationType="slide"
-            onRequestClose={() => setShowLanguagePicker(false)}
-        >
-            <View style={styles.modalOverlay}>
-                <View style={styles.modalContent}>
-                    <View style={styles.modalHeader}>
-                        <Text style={styles.modalTitle}>言語を選択</Text>
-                        <TouchableOpacity
-                            onPress={() => setShowLanguagePicker(false)}
-                            style={styles.modalCloseButton}
-                        >
-                            <Text style={styles.modalCloseText}>×</Text>
-                        </TouchableOpacity>
-                    </View>
-                    <ScrollView style={styles.modalScrollView}>
-                        {LANGUAGE_OPTIONS.map((option) => (
+            <Modal
+                visible={showLanguagePicker}
+                transparent={true}
+                animationType="slide"
+                onRequestClose={() => setShowLanguagePicker(false)}
+            >
+                <View style={styles.modalOverlay}>
+                    <View style={styles.modalContent}>
+                        <View style={styles.modalHeader}>
+                            <Text style={styles.modalTitle}>言語を選択</Text>
                             <TouchableOpacity
-                                key={option.value}
-                                style={[
-                                    styles.modalOption,
-                                    preferredLanguage === option.value && styles.modalSelectedOption
-                                ]}
-                                onPress={() => {
-                                    setPreferredLanguage(option.value);
-                                    setShowLanguagePicker(false);
-                                }}
-                                activeOpacity={0.8}
+                                onPress={() => setShowLanguagePicker(false)}
+                                style={styles.modalCloseButton}
                             >
-                                <Text style={[
-                                    styles.modalOptionText,
-                                    preferredLanguage === option.value && styles.modalSelectedOptionText
-                                ]}>
-                                    {option.label}
-                                </Text>
-                                {preferredLanguage === option.value && (
-                                    <Text style={styles.checkMark}>✓</Text>
-                                )}
+                                <Text style={styles.modalCloseText}>×</Text>
                             </TouchableOpacity>
-                        ))}
-                    </ScrollView>
+                        </View>
+                        <ScrollView style={styles.modalScrollView}>
+                            {LANGUAGE_OPTIONS.map((option) => (
+                                <TouchableOpacity
+                                    key={option.value}
+                                    style={[
+                                        styles.modalOption,
+                                        preferredLanguage === option.value
+                                        && styles.modalSelectedOption,
+                                    ]}
+                                    onPress={() => {
+                                        setPreferredLanguage(option.value);
+                                        setShowLanguagePicker(false);
+                                    }}
+                                    activeOpacity={0.8}
+                                >
+                                    <Text
+                                        style={[
+                                            styles.modalOptionText,
+                                            preferredLanguage === option.value
+                                            && styles.modalSelectedOptionText,
+                                        ]}
+                                    >
+                                        {option.label}
+                                    </Text>
+                                    {preferredLanguage === option.value && (
+                                        <Text style={styles.checkMark}>✓</Text>
+                                    )}
+                                </TouchableOpacity>
+                            ))}
+                        </ScrollView>
+                    </View>
                 </View>
-            </View>
-        </Modal>
+            </Modal>
         </View>
     );
 }
