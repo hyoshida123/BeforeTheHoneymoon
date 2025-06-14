@@ -230,7 +230,7 @@ export default function BeforeTheHoneymoon() {
                                         <Text style={styles.label}>行き先</Text>
                                     </View>
                                     <TextInput
-                                        placeholder="例: パリ、グアム、バリ島"
+                                        placeholder="例: パリ、グアム、モントリオール"
                                         value={destination}
                                         onChangeText={setDestination}
                                         style={styles.input}

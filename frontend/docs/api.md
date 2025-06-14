@@ -18,7 +18,7 @@
 
 | フィールド名        | 型     | 必須 | 説明                   | 例                                        |
 | ------------------- | ------ | ---- | ---------------------- | ----------------------------------------- |
-| `destination`       | string | ✓    | 撮影希望の目的地       | `"パリ"`, `"バリ島"`, `"グアム"`          |
+| `destination`       | string | ✓    | 撮影希望の目的地       | `"パリ"`, `"モントリオール"`, `"グアム"`          |
 | `preferredLanguage` | string | ✓    | ユーザーの希望する言語 | `"japanese"`, `"english"`, `"korean"`     |
 | `referenceImage`    | string | ✓    | 参考にしたい写真のURL  | `"https://images.unsplash.com/photo-..."` |
 
