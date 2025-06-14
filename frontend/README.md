@@ -2,7 +2,7 @@
 
 ```sh
 pnpm i
-pnpm start
+pnpm ios
 ```
 
-TODO: まだローカルで動作確認ができていないからいろいろやる
+起動後、Expo Go のアプリをインストールし、QRコードを読み込んでください

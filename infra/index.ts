@@ -1,5 +1,5 @@
-import * as pulumi from "@pulumi/pulumi";
 import * as gcp from "@pulumi/gcp";
+import * as pulumi from "@pulumi/pulumi";
 
 const config = new pulumi.Config("gcp");
 const project = config.require("project");
@@ -10,22 +10,23 @@ const resourcePrefix = `bth-${env}`;
 
 // 必要なAPIを有効にする
 const enableArtifactAPI = new gcp.projects.Service("artifactregistry-api", {
-  service: "artifactregistry.googleapis.com",
+    service: "artifactregistry.googleapis.com",
 });
 const enableFunctionsAPI = new gcp.projects.Service("cloudfunctions-api", {
-  service: "cloudfunctions.googleapis.com",
+    service: "cloudfunctions.googleapis.com",
 }, { dependsOn: [enableArtifactAPI] });
 
 // リポジトリの作成
 const repoName = `${resourcePrefix}-repo`;
 const repo = new gcp.artifactregistry.Repository(repoName, {
-  repositoryId: repoName,
-  format:       "DOCKER",
-  location:     region,
-  description:  "Docker repo for Cloud Function images",
+    repositoryId: repoName,
+    format: "DOCKER",
+    location: region,
+    description: "Docker repo for Cloud Function images",
 }, { dependsOn: [enableArtifactAPI] });
 
-export const repositoryUrl = pulumi.interpolate`${region}-docker.pkg.dev/${project}/${repo.repositoryId}`;
+export const repositoryUrl = pulumi
+    .interpolate`${region}-docker.pkg.dev/${project}/${repo.repositoryId}`;
 
 // 初回はコンテナイメージがないため、2回目のデプロイで関数を作成する
 const FIRST: boolean = process.env.FIRST === "true" ? true : false;

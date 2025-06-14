@@ -1,10 +1,10 @@
 name: BeforeTheHoneymoon
 description: A minimal Google Cloud TypeScript Pulumi program
 runtime:
-  name: nodejs
-  options:
-    packagemanager: pnpm
+    name: nodejs
+    options:
+        packagemanager: pnpm
 config:
-  pulumi:tags:
-    value:
-      pulumi:template: gcp-typescript
+    pulumi:tags:
+        value:
+            pulumi:template: gcp-typescript
