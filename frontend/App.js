@@ -1,7 +1,5 @@
 import {
     Camera,
-    ChevronRight,
-    DollarSign,
     Instagram,
     MapPin,
     Search,
@@ -23,54 +21,62 @@ import {
     View,
 } from "react-native";
 
+// Cloud Function のエンドポイント URL（実際のURLに変更してください）
+const CLOUD_FUNCTION_URL = "https://your-cloud-function-url.cloudfunctions.net/searchPhotographers";
+
+// テスト用：trueにするとCloud Functionを呼ばずに直接モックデータを返す
+const USE_MOCK_ONLY = true;
+
+// モック用のレスポンスデータ
+const MOCK_RESPONSE = {
+    images: [
+        {
+            imageUrl: "https://images.unsplash.com/photo-1519741497674-611481863552?w=400&h=400&fit=crop",
+            instagramUrl: "https://instagram.com/paris_wedding_photos"
+        },
+        {
+            imageUrl: "https://images.unsplash.com/photo-1511285560929-80b456fea0bc?w=400&h=400&fit=crop",
+            instagramUrl: "https://instagram.com/romantic_moments_paris"
+        },
+        {
+            imageUrl: "https://images.unsplash.com/photo-1465495976277-4387d4b0b4c6?w=400&h=400&fit=crop",
+            instagramUrl: "https://instagram.com/eiffel_captures"
+        },
+        {
+            imageUrl: "https://images.unsplash.com/photo-1519225421980-715cb0215aed?w=400&h=400&fit=crop",
+            instagramUrl: "https://instagram.com/paris_love_stories"
+        },
+        {
+            imageUrl: "https://images.unsplash.com/photo-1522673607200-164d1b6ce486?w=400&h=400&fit=crop",
+            instagramUrl: "https://instagram.com/french_wedding_photo"
+        },
+        {
+            imageUrl: "https://images.unsplash.com/photo-1460978812857-470ed1c77af0?w=400&h=400&fit=crop",
+            instagramUrl: "https://instagram.com/parisian_photographer"
+        },
+        {
+            imageUrl: "https://images.unsplash.com/photo-1522413452208-996ff3f3e740?w=400&h=400&fit=crop",
+            instagramUrl: "https://instagram.com/seine_wedding_shots"
+        },
+        {
+            imageUrl: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&h=400&fit=crop",
+            instagramUrl: "https://instagram.com/montmartre_memories"
+        },
+        {
+            imageUrl: "https://images.unsplash.com/photo-1591604466107-ec97de577aff?w=400&h=400&fit=crop",
+            instagramUrl: "https://instagram.com/louvre_love_photos"
+        }
+    ]
+};
+
 export default function BeforeTheHoneymoon() {
     const [destination, setDestination] = useState("");
     const [nationality, setNationality] = useState("");
     const [uploadedImage, setUploadedImage] = useState(null);
     const [isSearching, setIsSearching] = useState(false);
     const [searchResults, setSearchResults] = useState(null);
+    const [error, setError] = useState(null);
 
-    // デモ用のダミーデータ
-    const dummyPhotographers = [
-        {
-            id: 1,
-            name: "@paris_wedding_photos",
-            background: "フランス人フォトグラファー",
-            experienceWithNationalities: ["日本人", "韓国人", "中国人"],
-            priceRange: "€500-800 / session",
-            portfolio: [
-                "https://images.unsplash.com/photo-1519741497674-611481863552",
-                "https://images.unsplash.com/photo-1511285560929-80b456fea0bc",
-                "https://images.unsplash.com/photo-1465495976277-4387d4b0b4c6",
-                "https://images.unsplash.com/photo-1519225421980-715cb0215aed",
-                "https://images.unsplash.com/photo-1522673607200-164d1b6ce486",
-                "https://images.unsplash.com/photo-1460978812857-470ed1c77af0",
-                "https://images.unsplash.com/photo-1522413452208-996ff3f3e740",
-                "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d",
-                "https://images.unsplash.com/photo-1591604466107-ec97de577aff",
-            ],
-            instagramUrl: "https://instagram.com/paris_wedding_photos",
-        },
-        {
-            id: 2,
-            name: "@eiffel_moments",
-            background: "イタリア人フォトグラファー",
-            experienceWithNationalities: ["日本人", "アメリカ人"],
-            priceRange: "€400-700 / session",
-            portfolio: [
-                "https://images.unsplash.com/photo-1583939003579-730e3918a45a",
-                "https://images.unsplash.com/photo-1606216794074-735e91aa2c92",
-                "https://images.unsplash.com/photo-1544078751-58fee2d8a03b",
-                "https://images.unsplash.com/photo-1529636798458-92182e662485",
-                "https://images.unsplash.com/photo-1553915632-175f60dd8e36",
-                "https://images.unsplash.com/photo-1591343395082-e120087004b4",
-                "https://images.unsplash.com/photo-1550005809-91ad75fb315f",
-                "https://images.unsplash.com/photo-1522057384400-681b421cfebc",
-                "https://images.unsplash.com/photo-1594736797933-d0501ba2fe65",
-            ],
-            instagramUrl: "https://instagram.com/eiffel_moments",
-        },
-    ];
 
     // 画像アップロード（デモ: 実際はImagePicker等を使う）
     const handleImageUpload = async () => {
@@ -89,22 +95,70 @@ export default function BeforeTheHoneymoon() {
         );
     };
 
-    const handleSearch = () => {
+    const handleSearch = async () => {
         if (!destination || !nationality || !uploadedImage) {
             Alert.alert("エラー", "すべての項目を入力してください");
             return;
         }
 
         setIsSearching(true);
+        setError(null);
 
-        setTimeout(() => {
-            setSearchResults(dummyPhotographers);
+        try {
+            // モック専用モードの場合
+            if (USE_MOCK_ONLY) {
+                // モック用の遅延
+                await new Promise(resolve => setTimeout(resolve, 1500));
+                setSearchResults(MOCK_RESPONSE.images);
+                Alert.alert('モックモード', 'テスト用のモックデータを表示しています。');
+                return;
+            }
+
+            // Cloud Function に送信するデータ
+            const requestData = {
+                destination: destination,
+                nationality: nationality,
+                referenceImage: uploadedImage
+            };
+
+            const response = await fetch(CLOUD_FUNCTION_URL, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(requestData)
+            });
+
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+
+            const result = await response.json();
+            
+            // 結果が期待される形式かチェック
+            if (result && result.images && Array.isArray(result.images)) {
+                setSearchResults(result.images);
+            } else {
+                throw new Error('Invalid response format');
+            }
+        } catch (error) {
+            console.error('Search error:', error);
+            setError('検索中にエラーが発生しました。もう一度お試しください。');
+            Alert.alert('エラー', 'フォトグラファーの検索中にエラーが発生しました。');
+        } finally {
             setIsSearching(false);
-        }, 2000);
+        }
     };
 
-    const handlePhotographerClick = (url) => {
-        Linking.openURL(url);
+    const handleImageClick = (instagramUrl) => {
+        if (instagramUrl) {
+            Linking.openURL(instagramUrl);
+        }
+    };
+
+    const resetSearch = () => {
+        setSearchResults(null);
+        setError(null);
     };
 
     return (
@@ -247,7 +301,7 @@ export default function BeforeTheHoneymoon() {
                         // 検索結果
                         <View>
                             <TouchableOpacity
-                                onPress={() => setSearchResults(null)}
+                                onPress={resetSearch}
                                 style={styles.backButton}
                             >
                                 <Text style={styles.backButtonText}>
@@ -255,86 +309,42 @@ export default function BeforeTheHoneymoon() {
                                 </Text>
                             </TouchableOpacity>
 
-                            {searchResults.map((photographer) => (
-                                <View
-                                    key={photographer.id}
-                                    style={styles.resultBox}
-                                >
-                                    <View style={styles.resultHeader}>
-                                        <Instagram size={32} color="#ec4899" />
-                                        <Text style={styles.resultName}>
-                                            {photographer.name}
-                                        </Text>
-                                        <TouchableOpacity
-                                            onPress={() =>
-                                                handlePhotographerClick(
-                                                    photographer.instagramUrl,
-                                                )}
-                                            style={styles.instagramButton}
-                                        >
-                                            <Text
-                                                style={styles
-                                                    .instagramButtonText}
-                                            >
-                                                Instagramを見る
-                                            </Text>
-                                            <ChevronRight
-                                                size={16}
-                                                color="#fff"
-                                            />
-                                        </TouchableOpacity>
-                                    </View>
-                                    <View style={styles.resultInfoRow}>
-                                        <Text style={styles.resultInfoLabel}>
-                                            バックグラウンド:
-                                        </Text>
-                                        <Text style={styles.resultInfoText}>
-                                            {photographer.background}
-                                        </Text>
-                                    </View>
-                                    <View style={styles.resultInfoRow}>
-                                        <Text style={styles.resultInfoLabel}>
-                                            撮影経験のある国籍:
-                                        </Text>
-                                        <Text style={styles.resultInfoText}>
-                                            {photographer
-                                                .experienceWithNationalities
-                                                .join(", ")}
-                                        </Text>
-                                    </View>
-                                    <View style={styles.resultInfoRow}>
-                                        <DollarSign size={20} color="#22c55e" />
-                                        <Text
-                                            style={[styles.resultInfoLabel, {
-                                                marginLeft: 4,
-                                            }]}
-                                        >
-                                            料金相場:
-                                        </Text>
-                                        <Text style={styles.resultInfoText}>
-                                            {photographer.priceRange}
-                                        </Text>
-                                    </View>
-                                    <Text style={styles.portfolioLabel}>
-                                        ポートフォリオ
-                                    </Text>
-                                    <ScrollView
-                                        horizontal
-                                        showsHorizontalScrollIndicator={false}
-                                    >
-                                        {photographer.portfolio.map((
-                                            photo,
-                                            idx,
-                                        ) => (
-                                            <Image
-                                                key={idx}
-                                                source={{ uri: photo }}
-                                                style={styles.portfolioImage}
-                                            />
-                                        ))}
-                                    </ScrollView>
+                            {error ? (
+                                <View style={styles.errorBox}>
+                                    <Text style={styles.errorText}>{error}</Text>
                                 </View>
-                            ))}
+                            ) : (
+                                <View style={styles.resultsContainer}>
+                                    <Text style={styles.resultsTitle}>
+                                        フォトグラファーが見つかりました！
+                                    </Text>
+                                    <Text style={styles.resultsSubtitle}>
+                                        画像をタップしてInstagramを確認
+                                    </Text>
+                                    <View style={styles.imageGrid}>
+                                        {searchResults && searchResults.slice(0, 9).map((
+                                            item,
+                                            index,
+                                        ) => (
+                                            <TouchableOpacity
+                                                key={index}
+                                                style={styles.gridItem}
+                                                onPress={() => handleImageClick(item.instagramUrl)}
+                                                activeOpacity={0.8}
+                                            >
+                                                <Image
+                                                    source={{ uri: item.imageUrl }}
+                                                    style={styles.gridImage}
+                                                    resizeMode="cover"
+                                                />
+                                                <View style={styles.imageOverlay}>
+                                                    <Instagram size={24} color="#fff" />
+                                                </View>
+                                            </TouchableOpacity>
+                                        ))}
+                                    </View>
+                                </View>
+                            )}
                         </View>
                     )}
             </View>
@@ -359,7 +369,9 @@ const styles = StyleSheet.create({
     header: {
         alignItems: "center",
         marginBottom: 32,
-        paddingTop: 32,
+        paddingTop: 80,
+        minHeight: 200,
+        justifyContent: "center",
     },
     title: {
         fontSize: 32,
@@ -456,70 +468,64 @@ const styles = StyleSheet.create({
         fontWeight: "bold",
         fontSize: 16,
     },
-    resultBox: {
+    errorBox: {
+        backgroundColor: "#fee2e2",
+        borderRadius: 12,
+        padding: 16,
+        marginBottom: 24,
+    },
+    errorText: {
+        color: "#dc2626",
+        fontSize: 16,
+        textAlign: "center",
+    },
+    resultsContainer: {
         backgroundColor: "#fff",
         borderRadius: 24,
         padding: 24,
-        marginBottom: 24,
         shadowColor: "#000",
         shadowOpacity: 0.06,
         shadowRadius: 12,
         shadowOffset: { width: 0, height: 2 },
         elevation: 2,
     },
-    resultHeader: {
-        flexDirection: "row",
-        alignItems: "center",
-        marginBottom: 16,
-    },
-    resultName: {
-        fontSize: 20,
+    resultsTitle: {
+        fontSize: 24,
         fontWeight: "bold",
         color: "#2d2d2d",
-        marginLeft: 8,
-    },
-    instagramButton: {
-        backgroundColor: "#a855f7",
-        borderRadius: 16,
-        paddingVertical: 8,
-        paddingHorizontal: 16,
-        marginLeft: "auto",
-        flexDirection: "row",
-        alignItems: "center",
-    },
-    instagramButtonText: {
-        color: "#fff",
-        fontWeight: "bold",
-        marginRight: 4,
-        fontSize: 14,
-    },
-    resultInfoRow: {
-        flexDirection: "row",
-        alignItems: "center",
-        marginBottom: 6,
-    },
-    resultInfoLabel: {
-        fontWeight: "bold",
-        marginRight: 4,
-        color: "#444",
-        fontSize: 15,
-    },
-    resultInfoText: {
-        color: "#333",
-        fontSize: 15,
-    },
-    portfolioLabel: {
-        fontWeight: "bold",
-        marginTop: 12,
+        textAlign: "center",
         marginBottom: 8,
-        color: "#444",
-        fontSize: 15,
     },
-    portfolioImage: {
-        width: 100,
-        height: 100,
-        borderRadius: 8,
-        marginRight: 8,
-        backgroundColor: "#eee",
+    resultsSubtitle: {
+        fontSize: 16,
+        color: "#666",
+        textAlign: "center",
+        marginBottom: 24,
+    },
+    imageGrid: {
+        flexDirection: "row",
+        flexWrap: "wrap",
+        justifyContent: "space-between",
+    },
+    gridItem: {
+        width: "31%",
+        aspectRatio: 1,
+        marginBottom: 12,
+        borderRadius: 12,
+        overflow: "hidden",
+        position: "relative",
+    },
+    gridImage: {
+        width: "100%",
+        height: "100%",
+        backgroundColor: "#f0f0f0",
+    },
+    imageOverlay: {
+        position: "absolute",
+        top: 8,
+        right: 8,
+        backgroundColor: "rgba(0,0,0,0.6)",
+        borderRadius: 20,
+        padding: 6,
     },
 });
