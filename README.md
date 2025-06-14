@@ -35,3 +35,5 @@ flowchart LR
 ## イメージ図
 
 ![iOS Home Screen](./images/home_ios.jpg)
+
+![iOS Result Screen](./images/result_ios.jpg)
