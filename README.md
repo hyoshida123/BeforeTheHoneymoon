@@ -8,7 +8,7 @@ BeforeTheHoney は、フォトグラファーのためのポートフォリオ�
 
 - frontend: Expo Go
 - infra Pulumi
-- backend: TODO: 吉田さん作成予定
+- backend: TODO: 作成予定
 
 ## 全体アーキテクチャ
 
