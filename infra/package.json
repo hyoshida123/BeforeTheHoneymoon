@@ -1,5 +1,5 @@
 {
-    "name": "BeforeTheHoneymoon",
+    "name": "before-the-honeymoon",
     "main": "index.ts",
     "scripts": {
         "format": "dprint fmt"
