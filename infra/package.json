@@ -2,6 +2,8 @@
     "name": "before-the-honeymoon",
     "main": "index.ts",
     "scripts": {
+        "plan": "pulumi preview --color always",
+        "up": "pulumi up --color always",
         "format": "dprint fmt"
     },
     "devDependencies": {

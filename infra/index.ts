@@ -15,6 +15,9 @@ const enableArtifactAPI = new gcp.projects.Service("artifactregistry-api", {
 const enableFunctionsAPI = new gcp.projects.Service("cloudfunctions-api", {
     service: "cloudfunctions.googleapis.com",
 }, { dependsOn: [enableArtifactAPI] });
+const enableStorageAPI = new gcp.projects.Service("storage-api", {
+    service: "storage.googleapis.com",
+});
 
 // リポジトリの作成
 const repoName = `${resourcePrefix}-repo`;
@@ -27,6 +30,26 @@ const repo = new gcp.artifactregistry.Repository(repoName, {
 
 export const repositoryUrl = pulumi
     .interpolate`${region}-docker.pkg.dev/${project}/${repo.repositoryId}`;
+
+// Cloud Storageバケットの作成
+const imageBucketName = `${resourcePrefix}-storage`;
+const imageBucket = new gcp.storage.Bucket(imageBucketName, {
+    name: imageBucketName,
+    location: region,
+    storageClass: "STANDARD",
+    versioning: {
+        enabled: true,
+    },
+    cors: [{
+        origins: ["*"],
+        methods: ["GET", "HEAD", "PUT", "POST", "DELETE"],
+        responseHeaders: ["*"],
+        maxAgeSeconds: 3600,
+    }],
+}, { dependsOn: [enableStorageAPI] });
+
+export const bucketName = imageBucket.name;
+export const bucketUrl = pulumi.interpolate`gs://${imageBucket.name}`;
 
 // 初回はコンテナイメージがないため、2回目のデプロイで関数を作成する
 const FIRST: boolean = process.env.FIRST === "true" ? true : false;
@@ -44,6 +67,9 @@ if (!FIRST) {
         availableMemoryMb: 256,
         triggerHttp: true,
         ingressSettings: "ALLOW_ALL",
+        environmentVariables: {
+            BUCKET_NAME: imageBucket.name,
+        },
     }, { dependsOn: [enableFunctionsAPI, repo] });
 
     new gcp.cloudfunctions.FunctionIamMember("fn-invoker", {

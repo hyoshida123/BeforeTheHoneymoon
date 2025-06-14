@@ -12,12 +12,12 @@ pulumi config set gcp:project ${GCP_PROJECT_ID}
 pnpm i
 
 # 差分確認
-FIRST=true pulumi preview
-pulumi preview
+FIRST=true pnpm plan
+pnpm plan
 
 # デプロイ
-FIRST=true pulumi up
-pulumi up
+FIRST=true pnpm up
+pnpm up
 ```
 
 ## 注意
