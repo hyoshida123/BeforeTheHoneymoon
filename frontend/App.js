@@ -1,3 +1,4 @@
+import { USE_MOCK_ONLY } from "@env";
 import {
     Camera,
     Instagram,
@@ -21,52 +22,62 @@ import {
     View,
 } from "react-native";
 
-// Cloud Function のエンドポイント URL（実際のURLに変更してください）
-const CLOUD_FUNCTION_URL = "https://your-cloud-function-url.cloudfunctions.net/searchPhotographers";
-
 // テスト用：trueにするとCloud Functionを呼ばずに直接モックデータを返す
-const USE_MOCK_ONLY = true;
+const useMock = USE_MOCK_ONLY === "true" ? true : false;
+
+// Cloud Function のエンドポイント URL（実際のURLに変更してください）
+const CLOUD_FUNCTION_URL =
+    "https://your-cloud-function-url.cloudfunctions.net/searchPhotographers";
 
 // モック用のレスポンスデータ
 const MOCK_RESPONSE = {
     images: [
         {
-            imageUrl: "https://images.unsplash.com/photo-1519741497674-611481863552?w=400&h=400&fit=crop",
-            instagramUrl: "https://instagram.com/paris_wedding_photos"
+            imageUrl:
+                "https://images.unsplash.com/photo-1519741497674-611481863552?w=400&h=400&fit=crop",
+            instagramUrl: "https://instagram.com/paris_wedding_photos",
         },
         {
-            imageUrl: "https://images.unsplash.com/photo-1511285560929-80b456fea0bc?w=400&h=400&fit=crop",
-            instagramUrl: "https://instagram.com/romantic_moments_paris"
+            imageUrl:
+                "https://images.unsplash.com/photo-1511285560929-80b456fea0bc?w=400&h=400&fit=crop",
+            instagramUrl: "https://instagram.com/romantic_moments_paris",
         },
         {
-            imageUrl: "https://images.unsplash.com/photo-1465495976277-4387d4b0b4c6?w=400&h=400&fit=crop",
-            instagramUrl: "https://instagram.com/eiffel_captures"
+            imageUrl:
+                "https://images.unsplash.com/photo-1465495976277-4387d4b0b4c6?w=400&h=400&fit=crop",
+            instagramUrl: "https://instagram.com/eiffel_captures",
         },
         {
-            imageUrl: "https://images.unsplash.com/photo-1519225421980-715cb0215aed?w=400&h=400&fit=crop",
-            instagramUrl: "https://instagram.com/paris_love_stories"
+            imageUrl:
+                "https://images.unsplash.com/photo-1519225421980-715cb0215aed?w=400&h=400&fit=crop",
+            instagramUrl: "https://instagram.com/paris_love_stories",
         },
         {
-            imageUrl: "https://images.unsplash.com/photo-1522673607200-164d1b6ce486?w=400&h=400&fit=crop",
-            instagramUrl: "https://instagram.com/french_wedding_photo"
+            imageUrl:
+                "https://images.unsplash.com/photo-1522673607200-164d1b6ce486?w=400&h=400&fit=crop",
+            instagramUrl: "https://instagram.com/french_wedding_photo",
         },
         {
-            imageUrl: "https://images.unsplash.com/photo-1460978812857-470ed1c77af0?w=400&h=400&fit=crop",
-            instagramUrl: "https://instagram.com/parisian_photographer"
+            imageUrl:
+                "https://images.unsplash.com/photo-1460978812857-470ed1c77af0?w=400&h=400&fit=crop",
+            instagramUrl: "https://instagram.com/parisian_photographer",
         },
         {
-            imageUrl: "https://images.unsplash.com/photo-1522413452208-996ff3f3e740?w=400&h=400&fit=crop",
-            instagramUrl: "https://instagram.com/seine_wedding_shots"
+            imageUrl:
+                "https://images.unsplash.com/photo-1522413452208-996ff3f3e740?w=400&h=400&fit=crop",
+            instagramUrl: "https://instagram.com/seine_wedding_shots",
         },
         {
-            imageUrl: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&h=400&fit=crop",
-            instagramUrl: "https://instagram.com/montmartre_memories"
+            imageUrl:
+                "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&h=400&fit=crop",
+            instagramUrl: "https://instagram.com/montmartre_memories",
         },
         {
-            imageUrl: "https://images.unsplash.com/photo-1591604466107-ec97de577aff?w=400&h=400&fit=crop",
-            instagramUrl: "https://instagram.com/louvre_love_photos"
-        }
-    ]
+            imageUrl:
+                "https://images.unsplash.com/photo-1591604466107-ec97de577aff?w=400&h=400&fit=crop",
+            instagramUrl: "https://instagram.com/louvre_love_photos",
+        },
+    ],
 };
 
 export default function BeforeTheHoneymoon() {
@@ -76,7 +87,6 @@ export default function BeforeTheHoneymoon() {
     const [isSearching, setIsSearching] = useState(false);
     const [searchResults, setSearchResults] = useState(null);
     const [error, setError] = useState(null);
-
 
     // 画像アップロード（デモ: 実際はImagePicker等を使う）
     const handleImageUpload = async () => {
@@ -106,11 +116,14 @@ export default function BeforeTheHoneymoon() {
 
         try {
             // モック専用モードの場合
-            if (USE_MOCK_ONLY) {
+            if (useMock) {
                 // モック用の遅延
                 await new Promise(resolve => setTimeout(resolve, 1500));
                 setSearchResults(MOCK_RESPONSE.images);
-                Alert.alert('モックモード', 'テスト用のモックデータを表示しています。');
+                Alert.alert(
+                    "モックモード",
+                    "テスト用のモックデータを表示しています。",
+                );
                 return;
             }
 
@@ -118,15 +131,15 @@ export default function BeforeTheHoneymoon() {
             const requestData = {
                 destination: destination,
                 nationality: nationality,
-                referenceImage: uploadedImage
+                referenceImage: uploadedImage,
             };
 
             const response = await fetch(CLOUD_FUNCTION_URL, {
-                method: 'POST',
+                method: "POST",
                 headers: {
-                    'Content-Type': 'application/json',
+                    "Content-Type": "application/json",
                 },
-                body: JSON.stringify(requestData)
+                body: JSON.stringify(requestData),
             });
 
             if (!response.ok) {
@@ -134,17 +147,20 @@ export default function BeforeTheHoneymoon() {
             }
 
             const result = await response.json();
-            
+
             // 結果が期待される形式かチェック
             if (result && result.images && Array.isArray(result.images)) {
                 setSearchResults(result.images);
             } else {
-                throw new Error('Invalid response format');
+                throw new Error("Invalid response format");
             }
         } catch (error) {
-            console.error('Search error:', error);
-            setError('検索中にエラーが発生しました。もう一度お試しください。');
-            Alert.alert('エラー', 'フォトグラファーの検索中にエラーが発生しました。');
+            console.error("Search error:", error);
+            setError("検索中にエラーが発生しました。もう一度お試しください。");
+            Alert.alert(
+                "エラー",
+                "フォトグラファーの検索中にエラーが発生しました。",
+            );
         } finally {
             setIsSearching(false);
         }
@@ -309,42 +325,62 @@ export default function BeforeTheHoneymoon() {
                                 </Text>
                             </TouchableOpacity>
 
-                            {error ? (
-                                <View style={styles.errorBox}>
-                                    <Text style={styles.errorText}>{error}</Text>
-                                </View>
-                            ) : (
-                                <View style={styles.resultsContainer}>
-                                    <Text style={styles.resultsTitle}>
-                                        フォトグラファーが見つかりました！
-                                    </Text>
-                                    <Text style={styles.resultsSubtitle}>
-                                        画像をタップしてInstagramを確認
-                                    </Text>
-                                    <View style={styles.imageGrid}>
-                                        {searchResults && searchResults.slice(0, 9).map((
-                                            item,
-                                            index,
-                                        ) => (
-                                            <TouchableOpacity
-                                                key={index}
-                                                style={styles.gridItem}
-                                                onPress={() => handleImageClick(item.instagramUrl)}
-                                                activeOpacity={0.8}
-                                            >
-                                                <Image
-                                                    source={{ uri: item.imageUrl }}
-                                                    style={styles.gridImage}
-                                                    resizeMode="cover"
-                                                />
-                                                <View style={styles.imageOverlay}>
-                                                    <Instagram size={24} color="#fff" />
-                                                </View>
-                                            </TouchableOpacity>
-                                        ))}
+                            {error
+                                ? (
+                                    <View style={styles.errorBox}>
+                                        <Text style={styles.errorText}>
+                                            {error}
+                                        </Text>
                                     </View>
-                                </View>
-                            )}
+                                )
+                                : (
+                                    <View style={styles.resultsContainer}>
+                                        <Text style={styles.resultsTitle}>
+                                            フォトグラファーが見つかりました！
+                                        </Text>
+                                        <Text style={styles.resultsSubtitle}>
+                                            画像をタップしてInstagramを確認
+                                        </Text>
+                                        <View style={styles.imageGrid}>
+                                            {searchResults
+                                                && searchResults.slice(0, 9)
+                                                    .map((
+                                                        item,
+                                                        index,
+                                                    ) => (
+                                                        <TouchableOpacity
+                                                            key={index}
+                                                            style={styles
+                                                                .gridItem}
+                                                            onPress={() =>
+                                                                handleImageClick(
+                                                                    item.instagramUrl,
+                                                                )}
+                                                            activeOpacity={0.8}
+                                                        >
+                                                            <Image
+                                                                source={{
+                                                                    uri: item
+                                                                        .imageUrl,
+                                                                }}
+                                                                style={styles
+                                                                    .gridImage}
+                                                                resizeMode="cover"
+                                                            />
+                                                            <View
+                                                                style={styles
+                                                                    .imageOverlay}
+                                                            >
+                                                                <Instagram
+                                                                    size={24}
+                                                                    color="#fff"
+                                                                />
+                                                            </View>
+                                                        </TouchableOpacity>
+                                                    ))}
+                                        </View>
+                                    </View>
+                                )}
                         </View>
                     )}
             </View>
