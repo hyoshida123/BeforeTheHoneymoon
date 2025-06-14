@@ -7,12 +7,13 @@ import {
     Upload,
     User,
 } from "lucide-react-native";
-import React, { useState } from "react";
+import { useState } from "react";
 import {
     ActivityIndicator,
     Alert,
     Image,
     Linking,
+    Modal,
     Platform,
     ScrollView,
     StyleSheet,
@@ -21,6 +22,13 @@ import {
     TouchableOpacity,
     View,
 } from "react-native";
+
+// Web用のフォント設定をシンプルに
+const webFontFamily = Platform.OS === 'web' 
+    ? {
+        fontFamily: 'system-ui, -apple-system, sans-serif'
+    }
+    : {};
 
 // テスト用：trueにするとCloud Functionを呼ばずに直接モックデータを返す
 const useMock = USE_MOCK_ONLY === "true" ? true : false;
@@ -80,9 +88,24 @@ const MOCK_RESPONSE = {
     ],
 };
 
+// 言語オプション
+const LANGUAGE_OPTIONS = [
+    { label: "言語を選択してください", value: "" },
+    { label: "日本語", value: "japanese" },
+    { label: "English", value: "english" },
+    { label: "한국어", value: "korean" },
+    { label: "中文", value: "chinese" },
+    { label: "Français", value: "french" },
+    { label: "Español", value: "spanish" },
+    { label: "Deutsch", value: "german" },
+    { label: "Italiano", value: "italian" },
+    { label: "Português", value: "portuguese" },
+];
+
 export default function BeforeTheHoneymoon() {
     const [destination, setDestination] = useState("");
-    const [nationality, setNationality] = useState("");
+    const [preferredLanguage, setPreferredLanguage] = useState("");
+    const [showLanguagePicker, setShowLanguagePicker] = useState(false);
     const [uploadedImage, setUploadedImage] = useState(null);
     const [isSearching, setIsSearching] = useState(false);
     const [searchResults, setSearchResults] = useState(null);
@@ -106,7 +129,7 @@ export default function BeforeTheHoneymoon() {
     };
 
     const handleSearch = async () => {
-        if (!destination || !nationality || !uploadedImage) {
+        if (!destination || !preferredLanguage || !uploadedImage) {
             Alert.alert("エラー", "すべての項目を入力してください");
             return;
         }
@@ -130,7 +153,7 @@ export default function BeforeTheHoneymoon() {
             // Cloud Function に送信するデータ
             const requestData = {
                 destination: destination,
-                nationality: nationality,
+                preferredLanguage: preferredLanguage,
                 referenceImage: uploadedImage,
             };
 
@@ -178,10 +201,11 @@ export default function BeforeTheHoneymoon() {
     };
 
     return (
-        <ScrollView
-            style={styles.container}
-            contentContainerStyle={styles.contentContainer}
-        >
+        <View style={styles.container}>
+            <ScrollView
+                style={styles.scrollContainer}
+                contentContainerStyle={styles.contentContainer}
+            >
             <View style={styles.inner}>
                 {/* ヘッダー */}
                 <View style={styles.header}>
@@ -214,7 +238,7 @@ export default function BeforeTheHoneymoon() {
                                 />
                             </View>
 
-                            {/* 国籍入力 */}
+                            {/* 言語選択 */}
                             <View style={styles.inputBlock}>
                                 <View style={styles.labelRow}>
                                     <User
@@ -223,16 +247,24 @@ export default function BeforeTheHoneymoon() {
                                         style={styles.icon}
                                     />
                                     <Text style={styles.label}>
-                                        あなたの国籍
+                                        希望する言語
                                     </Text>
                                 </View>
-                                <TextInput
-                                    placeholder="例: 日本人、韓国人、アメリカ人"
-                                    value={nationality}
-                                    onChangeText={setNationality}
-                                    style={styles.input}
-                                    placeholderTextColor="#aaa"
-                                />
+                                <TouchableOpacity
+                                    style={styles.pickerButton}
+                                    onPress={() => setShowLanguagePicker(true)}
+                                    activeOpacity={0.8}
+                                >
+                                    <Text style={[
+                                        styles.pickerButtonText,
+                                        !preferredLanguage && styles.pickerPlaceholder
+                                    ]}>
+                                        {preferredLanguage 
+                                            ? LANGUAGE_OPTIONS.find(lang => lang.value === preferredLanguage)?.label
+                                            : "言語を選択してください"
+                                        }
+                                    </Text>
+                                </TouchableOpacity>
                             </View>
 
                             {/* 画像アップロード */}
@@ -384,7 +416,56 @@ export default function BeforeTheHoneymoon() {
                         </View>
                     )}
             </View>
-        </ScrollView>
+            </ScrollView>
+
+            {/* 言語選択モーダル */}
+        <Modal
+            visible={showLanguagePicker}
+            transparent={true}
+            animationType="slide"
+            onRequestClose={() => setShowLanguagePicker(false)}
+        >
+            <View style={styles.modalOverlay}>
+                <View style={styles.modalContent}>
+                    <View style={styles.modalHeader}>
+                        <Text style={styles.modalTitle}>言語を選択</Text>
+                        <TouchableOpacity
+                            onPress={() => setShowLanguagePicker(false)}
+                            style={styles.modalCloseButton}
+                        >
+                            <Text style={styles.modalCloseText}>×</Text>
+                        </TouchableOpacity>
+                    </View>
+                    <ScrollView style={styles.modalScrollView}>
+                        {LANGUAGE_OPTIONS.map((option) => (
+                            <TouchableOpacity
+                                key={option.value}
+                                style={[
+                                    styles.modalOption,
+                                    preferredLanguage === option.value && styles.modalSelectedOption
+                                ]}
+                                onPress={() => {
+                                    setPreferredLanguage(option.value);
+                                    setShowLanguagePicker(false);
+                                }}
+                                activeOpacity={0.8}
+                            >
+                                <Text style={[
+                                    styles.modalOptionText,
+                                    preferredLanguage === option.value && styles.modalSelectedOptionText
+                                ]}>
+                                    {option.label}
+                                </Text>
+                                {preferredLanguage === option.value && (
+                                    <Text style={styles.checkMark}>✓</Text>
+                                )}
+                            </TouchableOpacity>
+                        ))}
+                    </ScrollView>
+                </View>
+            </View>
+        </Modal>
+        </View>
     );
 }
 
@@ -392,6 +473,9 @@ const styles = StyleSheet.create({
     container: {
         flex: 1,
         backgroundColor: "#fdf6fb",
+    },
+    scrollContainer: {
+        flex: 1,
     },
     contentContainer: {
         padding: 16,
@@ -414,10 +498,12 @@ const styles = StyleSheet.create({
         fontWeight: "bold",
         color: "#2d2d2d",
         marginBottom: 8,
+        ...webFontFamily,
     },
     subtitle: {
         color: "#666",
         fontSize: 16,
+        ...webFontFamily,
     },
     formBox: {
         backgroundColor: "#fff",
@@ -442,6 +528,7 @@ const styles = StyleSheet.create({
         fontWeight: "bold",
         color: "#333",
         fontSize: 16,
+        ...webFontFamily,
     },
     icon: {
         marginRight: 6,
@@ -453,6 +540,7 @@ const styles = StyleSheet.create({
         padding: Platform.OS === "ios" ? 14 : 10,
         backgroundColor: "#fafafa",
         fontSize: 16,
+        ...webFontFamily,
     },
     uploadBox: {
         borderWidth: 2,
@@ -467,6 +555,7 @@ const styles = StyleSheet.create({
     uploadText: {
         color: "#666",
         marginTop: 8,
+        ...webFontFamily,
     },
     uploadedImage: {
         width: 120,
@@ -478,6 +567,7 @@ const styles = StyleSheet.create({
         color: "red",
         marginTop: 4,
         fontWeight: "bold",
+        ...webFontFamily,
     },
     searchButton: {
         backgroundColor: "#a855f7",
@@ -495,6 +585,102 @@ const styles = StyleSheet.create({
         fontWeight: "bold",
         marginLeft: 8,
         fontSize: 16,
+        ...webFontFamily,
+    },
+    pickerButton: {
+        borderWidth: 1,
+        borderColor: "#ccc",
+        borderRadius: 8,
+        padding: Platform.OS === "ios" ? 14 : 10,
+        backgroundColor: "#fafafa",
+        minHeight: 50,
+        justifyContent: "center",
+    },
+    pickerButtonText: {
+        fontSize: 16,
+        color: "#333",
+        ...webFontFamily,
+    },
+    pickerPlaceholder: {
+        color: "#aaa",
+        ...webFontFamily,
+    },
+    // モーダル関連のスタイル
+    modalOverlay: {
+        flex: 1,
+        backgroundColor: "rgba(0, 0, 0, 0.5)",
+        justifyContent: "center",
+        alignItems: "center",
+        padding: 20,
+    },
+    modalContent: {
+        backgroundColor: "#fff",
+        borderRadius: 20,
+        width: "100%",
+        maxWidth: 400,
+        maxHeight: "80%",
+        elevation: 10,
+        shadowColor: "#000",
+        shadowOpacity: 0.25,
+        shadowRadius: 10,
+        shadowOffset: { width: 0, height: 5 },
+    },
+    modalHeader: {
+        flexDirection: "row",
+        justifyContent: "space-between",
+        alignItems: "center",
+        padding: 20,
+        borderBottomWidth: 1,
+        borderBottomColor: "#eee",
+    },
+    modalTitle: {
+        fontSize: 20,
+        fontWeight: "bold",
+        color: "#333",
+        ...webFontFamily,
+    },
+    modalCloseButton: {
+        width: 30,
+        height: 30,
+        borderRadius: 15,
+        backgroundColor: "#f0f0f0",
+        justifyContent: "center",
+        alignItems: "center",
+    },
+    modalCloseText: {
+        fontSize: 18,
+        color: "#666",
+        ...webFontFamily,
+    },
+    modalScrollView: {
+        maxHeight: 300,
+    },
+    modalOption: {
+        flexDirection: "row",
+        justifyContent: "space-between",
+        alignItems: "center",
+        padding: 16,
+        borderBottomWidth: 1,
+        borderBottomColor: "#f0f0f0",
+    },
+    modalSelectedOption: {
+        backgroundColor: "#f3e8ff",
+    },
+    modalOptionText: {
+        fontSize: 16,
+        color: "#333",
+        ...webFontFamily,
+    },
+    modalSelectedOptionText: {
+        color: "#a855f7",
+        fontWeight: "bold",
+        ...webFontFamily,
+    },
+    checkMark: {
+        fontSize: 16,
+        color: "#a855f7",
+        fontWeight: "bold",
+        ...webFontFamily,
     },
     backButton: {
         marginBottom: 24,
@@ -503,6 +689,7 @@ const styles = StyleSheet.create({
         color: "#a855f7",
         fontWeight: "bold",
         fontSize: 16,
+        ...webFontFamily,
     },
     errorBox: {
         backgroundColor: "#fee2e2",
@@ -514,6 +701,7 @@ const styles = StyleSheet.create({
         color: "#dc2626",
         fontSize: 16,
         textAlign: "center",
+        ...webFontFamily,
     },
     resultsContainer: {
         backgroundColor: "#fff",
@@ -531,12 +719,14 @@ const styles = StyleSheet.create({
         color: "#2d2d2d",
         textAlign: "center",
         marginBottom: 8,
+        ...webFontFamily,
     },
     resultsSubtitle: {
         fontSize: 16,
         color: "#666",
         textAlign: "center",
         marginBottom: 24,
+        ...webFontFamily,
     },
     imageGrid: {
         flexDirection: "row",
