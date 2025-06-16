@@ -6,10 +6,10 @@
 - https://zenn.dev/satohjohn/articles/b23bd65c289257
 
 
-infra: Cloud Run
-storage: Cloud Storage
-python package manager: uv
-linter: ruff
+- infra: Cloud Run
+- storage: Cloud Storage
+- python package manager: uv
+- linter: ruff
 
 ## 開発・実行方法
 
