@@ -7,8 +7,8 @@ BeforeTheHoney は、フォトグラファーのためのポートフォリオ�
 ## ディレクトリ構成
 
 - frontend: Expo Go
-- infra Pulumi
-- backend: TODO: FastAPI と Google ADK
+- infra: Pulumi
+- backend: FastAPI と Google ADK
 
 ## 全体アーキテクチャ
 
