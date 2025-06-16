@@ -1,0 +1,23 @@
+__pycache__/
+.ruff_cache/
+
+# Unit test / coverage reports
+htmlcov/
+.coverage
+.coverage.*
+.pytest_cache/
+cover/
+
+# pyenv
+.python-version
+
+# poetry
+poetry.lock
+
+# Environments
+.env
+.venv/
+
+
+# Cloud Functions
+.gcloudignore 

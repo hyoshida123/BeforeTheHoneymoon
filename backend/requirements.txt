@@ -1,0 +1,11 @@
+# Backend dependencies for Before the Honeymoon API
+# Generated from pyproject.toml for compatibility
+
+fastapi
+uvicorn[standard]
+pydantic
+functions-framework
+
+# Development dependencies (optional)
+# pytest
+# httpx  # for testing FastAPI
