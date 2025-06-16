@@ -2,8 +2,8 @@
 
 続きの実装は以下を参照
 
-https://google.github.io/adk-docs/deploy/cloud-run/
-https://zenn.dev/satohjohn/articles/b23bd65c289257
+- https://google.github.io/adk-docs/deploy/cloud-run/
+- https://zenn.dev/satohjohn/articles/b23bd65c289257
 
 
 infra: Cloud Run
