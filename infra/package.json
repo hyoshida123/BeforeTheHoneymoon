@@ -2,17 +2,15 @@
     "name": "before-the-honeymoon",
     "main": "index.ts",
     "scripts": {
-        "plan": "pulumi preview --color always",
-        "up": "pulumi up --color always",
         "format": "dprint fmt"
     },
     "devDependencies": {
-        "@types/node": "^18",
-        "typescript": "^5.0.0"
+        "@types/node": "^18.19.113",
+        "typescript": "^5.8.3"
     },
     "dependencies": {
-        "@pulumi/gcp": "^8.0.0",
-        "@pulumi/pulumi": "^3.113.0",
+        "@pulumi/gcp": "^8.36.0",
+        "@pulumi/pulumi": "^3.181.0",
         "dprint": "^0.50.0"
     },
     "packageManager": "pnpm@10.7.1+sha512.2d92c86b7928dc8284f53494fb4201f983da65f0fb4f0d40baafa5cf628fa31dae3e5968f12466f17df7e97310e30f343a648baea1b9b350685dafafffdf5808"

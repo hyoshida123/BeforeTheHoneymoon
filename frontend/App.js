@@ -1,4 +1,5 @@
-import { USE_MOCK_ONLY } from "@env";
+import { USE_MOCK_ONLY, API_ENDPOINT_URL } from "@env";
+import * as ImagePicker from 'expo-image-picker';
 import {
     Camera,
     Instagram,
@@ -30,12 +31,11 @@ const webFontFamily = Platform.OS === "web"
     }
     : {};
 
-// テスト用：trueにするとCloud Functionを呼ばずに直接モックデータを返す
+// テスト用：trueにするとCloud Run APIを呼ばずに直接モックデータを返す
 const useMock = USE_MOCK_ONLY === "true" ? true : false;
 
-// Cloud Function のエンドポイント URL（実際のURLに変更してください）
-const CLOUD_FUNCTION_URL =
-    "https://your-cloud-function-url.cloudfunctions.net/searchPhotographers";
+// Cloud Run API のエンドポイント URL（環境変数から読み込み、デフォルト値を設定）
+const API_URL = API_ENDPOINT_URL || "dummy";
 
 // モック用のレスポンスデータ
 const MOCK_RESPONSE = {
@@ -111,21 +111,28 @@ export default function BeforeTheHoneymoon() {
     const [searchResults, setSearchResults] = useState(null);
     const [error, setError] = useState(null);
 
-    // 画像アップロード（デモ: 実際はImagePicker等を使う）
     const handleImageUpload = async () => {
-        Alert.alert(
-            "画像アップロード",
-            "実際の画像アップロードは未実装です。\nデモ用画像をセットします。",
-            [
-                {
-                    text: "OK",
-                    onPress: () =>
-                        setUploadedImage(
-                            "https://images.unsplash.com/photo-1519741497674-611481863552",
-                        ),
-                },
-            ],
-        );
+        try {
+            const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
+            
+            if (permissionResult.granted === false) {
+                Alert.alert("権限エラー", "写真ライブラリへのアクセス権限が必要です");
+                return;
+            }
+
+            const result = await ImagePicker.launchImageLibraryAsync({
+                mediaTypes: ['images'],
+                allowsEditing: true,
+                aspect: [4, 3],
+                quality: 1,
+            });
+
+            if (!result.canceled) {
+                setUploadedImage(result.assets[0].uri);
+            }
+        } catch (error) {
+            Alert.alert("エラー", "画像の選択中にエラーが発生しました");
+        }
     };
 
     const handleSearch = async () => {
@@ -150,14 +157,14 @@ export default function BeforeTheHoneymoon() {
                 return;
             }
 
-            // Cloud Function に送信するデータ
+            // Cloud Run API に送信するデータ
             const requestData = {
                 destination: destination,
                 preferredLanguage: preferredLanguage,
                 referenceImage: uploadedImage,
             };
 
-            const response = await fetch(CLOUD_FUNCTION_URL, {
+            const response = await fetch(API_URL, {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
@@ -266,7 +273,7 @@ export default function BeforeTheHoneymoon() {
                                             {preferredLanguage
                                                 ? LANGUAGE_OPTIONS.find(lang =>
                                                     lang.value
-                                                        === preferredLanguage
+                                                    === preferredLanguage
                                                 )?.label
                                                 : "言語を選択してください"}
                                         </Text>

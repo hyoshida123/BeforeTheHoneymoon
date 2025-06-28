@@ -12,8 +12,8 @@ const resourcePrefix = `bth-${env}`;
 const enableArtifactAPI = new gcp.projects.Service("artifactregistry-api", {
     service: "artifactregistry.googleapis.com",
 });
-const enableFunctionsAPI = new gcp.projects.Service("cloudfunctions-api", {
-    service: "cloudfunctions.googleapis.com",
+const enableRunAPI = new gcp.projects.Service("run-api", {
+    service: "run.googleapis.com",
 }, { dependsOn: [enableArtifactAPI] });
 const enableStorageAPI = new gcp.projects.Service("storage-api", {
     service: "storage.googleapis.com",
@@ -25,13 +25,13 @@ const repo = new gcp.artifactregistry.Repository(repoName, {
     repositoryId: repoName,
     format: "DOCKER",
     location: region,
-    description: "Docker repo for Cloud Function images",
+    description: "Docker repo for Cloud Run images",
 }, { dependsOn: [enableArtifactAPI] });
 
 export const repositoryUrl = pulumi
     .interpolate`${region}-docker.pkg.dev/${project}/${repo.repositoryId}`;
 
-// Cloud Storageバケットの作成
+// Cloud Storageバケットの作成（画像保存用）
 const imageBucketName = `${resourcePrefix}-storage`;
 const imageBucket = new gcp.storage.Bucket(imageBucketName, {
     name: imageBucketName,
@@ -48,37 +48,69 @@ const imageBucket = new gcp.storage.Bucket(imageBucketName, {
     }],
 }, { dependsOn: [enableStorageAPI] });
 
+// Cloud Storageバケットの作成（ホスティング用）
+const hostingBucketNameVar = `${resourcePrefix}-hosting`;
+const hostingBucket = new gcp.storage.Bucket(hostingBucketNameVar, {
+    name: hostingBucketNameVar,
+    location: region,
+    storageClass: "STANDARD",
+    website: {
+        mainPageSuffix: "index.html",
+        notFoundPage: "index.html",
+    },
+    uniformBucketLevelAccess: true,
+}, { dependsOn: [enableStorageAPI] });
+
+// ホスティングバケットを公開
+new gcp.storage.BucketIAMMember("hosting-public", {
+    bucket: hostingBucket.name,
+    role: "roles/storage.objectViewer",
+    member: "allUsers",
+}, { dependsOn: [hostingBucket] });
+
 export const bucketName = imageBucket.name;
 export const bucketUrl = pulumi.interpolate`gs://${imageBucket.name}`;
+export const hostingBucketName = hostingBucket.name;
+export const hostingBucketUrl = pulumi.interpolate`gs://${hostingBucket.name}`;
 
-// 初回はコンテナイメージがないため、2回目のデプロイで関数を作成する
+
+// 初回はコンテナイメージがないため、2回目のデプロイでサービスを作成する
 const FIRST: boolean = process.env.FIRST === "true" ? true : false;
-let fn: gcp.cloudfunctions.Function | undefined;
+let service: gcp.cloudrun.Service | undefined;
 if (!FIRST) {
-    // TODO: あとで変更する
-    const funcName = `${resourcePrefix}-function`;
-    const fn = new gcp.cloudfunctions.Function(funcName, {
-        name: funcName,
-        region: region,
-        runtime: "nodejs20",
-        dockerRegistry: "ARTIFACT_REGISTRY",
-        dockerRepository: pulumi.interpolate`${repositoryUrl}/handler:latest`,
-        entryPoint: "handler",
-        availableMemoryMb: 256,
-        triggerHttp: true,
-        ingressSettings: "ALLOW_ALL",
-        environmentVariables: {
-            BUCKET_NAME: imageBucket.name,
+    const serviceName = `${resourcePrefix}-service`;
+    service = new gcp.cloudrun.Service(serviceName, {
+        name: serviceName,
+        location: region,
+        template: {
+            spec: {
+                containers: [{
+                    image: pulumi.interpolate`${repositoryUrl}/handler:latest`,
+                    ports: [{
+                        containerPort: 8080,
+                    }],
+                    envs: [{
+                        name: "BUCKET_NAME",
+                        value: imageBucket.name,
+                    }],
+                    resources: {
+                        limits: {
+                            memory: "256Mi",
+                            cpu: "1000m",
+                        },
+                    },
+                }],
+            },
         },
-    }, { dependsOn: [enableFunctionsAPI, repo] });
+    }, { dependsOn: [enableRunAPI, repo] });
 
-    new gcp.cloudfunctions.FunctionIamMember("fn-invoker", {
-        project: fn.project,
-        region: fn.region,
-        cloudFunction: fn.name,
-        role: "roles/cloudfunctions.invoker",
+    // Cloud Runサービスを公開
+    new gcp.cloudrun.IamMember("service-public", {
+        location: service.location,
+        service: service.name,
+        role: "roles/run.invoker",
         member: "allUsers",
     });
 }
 
-export const functionUrl = fn?.httpsTriggerUrl || "dummy";
+export const serviceUrl = service?.statuses?.[0]?.url || "dummy";

@@ -15,12 +15,13 @@
 ## 開発・実行方法
 
 ### ローカル開発
+
 ```bash
 # 依存関係のインストール
 uv sync
 
 # 開発サーバー起動
-uvicorn app:app --reload
+uv run uvicorn app:app --reload
 # または
 uv run python app/app.py
 
@@ -29,5 +30,6 @@ uv run ruff format --check
 ```
 
 ### エントリーポイント
+
 - メインアプリケーション: `app.py`
 - FastAPIアプリケーションオブジェクト: `app`

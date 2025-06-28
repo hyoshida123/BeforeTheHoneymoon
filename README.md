@@ -2,13 +2,14 @@
 
 ## 概要
 
-BeforeTheHoney は、フォトグラファーのためのポートフォリオサイトです。
+BeforeTheHoney はハネムーン中の夫婦にぴったりなフォトグラファーを探すサービスです。
 
 ## ディレクトリ構成
 
+- backend: FastAPI と Google ADK
 - frontend: Expo Go
 - infra: Pulumi
-- backend: FastAPI と Google ADK
+- images: 画像リソース
 
 ## 全体アーキテクチャ
 
@@ -19,12 +20,12 @@ flowchart LR
     end
     
     subgraph Cloud
-        B[Cloud Function]
+        B[Cloud Run]
         C[Generative AI API]
         D[Cloud Storage]
     end
     
-    A -->|Invoke Cloud Function| B
+    A -->|Request| B
     B -->|Request to AI API| C
     C -->|Result| B
     B -->|Save to Storage| D
@@ -34,6 +35,10 @@ flowchart LR
 
 ## イメージ図
 
-![iOS Home Screen](./images/home_ios.jpg)
+<div style="text-align: center;">
+  <img src="./images/home_ios.jpg" alt="iOS Home Screen" width="300">
+</div>
 
-![iOS Result Screen](./images/result_ios.jpg)
+<div style="text-align: center;">
+  <img src="./images/result_ios.jpg" alt="iOS Result Screen" width="300">
+</div>
