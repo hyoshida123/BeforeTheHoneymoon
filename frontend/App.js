@@ -32,7 +32,7 @@ const webFontFamily = Platform.OS === "web"
     : {};
 
 // テスト用：trueにするとCloud Run APIを呼ばずに直接モックデータを返す
-const useMock = USE_MOCK_ONLY === "true" ? true : false;
+const useMock = USE_MOCK_ONLY === "true";
 
 // Cloud Run API のエンドポイント URL（環境変数から読み込み、デフォルト値を設定）
 const API_URL = API_ENDPOINT_URL || "dummy";
@@ -164,7 +164,7 @@ export default function BeforeTheHoneymoon() {
                 referenceImage: uploadedImage,
             };
 
-            const response = await fetch(API_URL, {
+            const response = await fetch(`${API_URL}/searchPhotographers`, {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",

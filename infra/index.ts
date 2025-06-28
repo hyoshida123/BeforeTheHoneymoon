@@ -31,6 +31,12 @@ const repo = new gcp.artifactregistry.Repository(repoName, {
 export const repositoryUrl = pulumi
     .interpolate`${region}-docker.pkg.dev/${project}/${repo.repositoryId}`;
 
+// Cloud Run サービスアカウントの作成
+const cloudRunServiceAccount = new gcp.serviceaccount.Account("cloudrun-service-account", {
+    accountId: `bth-${env}-cloudrun`,
+    displayName: "Cloud Run Service Account",
+});
+
 // Cloud Storageバケットの作成（画像保存用）
 const imageBucketName = `${resourcePrefix}-storage`;
 const imageBucket = new gcp.storage.Bucket(imageBucketName, {
@@ -73,44 +79,9 @@ export const bucketUrl = pulumi.interpolate`gs://${imageBucket.name}`;
 export const hostingBucketName = hostingBucket.name;
 export const hostingBucketUrl = pulumi.interpolate`gs://${hostingBucket.name}`;
 
-
-// 初回はコンテナイメージがないため、2回目のデプロイでサービスを作成する
-const FIRST: boolean = process.env.FIRST === "true" ? true : false;
-let service: gcp.cloudrun.Service | undefined;
-if (!FIRST) {
-    const serviceName = `${resourcePrefix}-service`;
-    service = new gcp.cloudrun.Service(serviceName, {
-        name: serviceName,
-        location: region,
-        template: {
-            spec: {
-                containers: [{
-                    image: pulumi.interpolate`${repositoryUrl}/handler:latest`,
-                    ports: [{
-                        containerPort: 8080,
-                    }],
-                    envs: [{
-                        name: "BUCKET_NAME",
-                        value: imageBucket.name,
-                    }],
-                    resources: {
-                        limits: {
-                            memory: "256Mi",
-                            cpu: "1000m",
-                        },
-                    },
-                }],
-            },
-        },
-    }, { dependsOn: [enableRunAPI, repo] });
-
-    // Cloud Runサービスを公開
-    new gcp.cloudrun.IamMember("service-public", {
-        location: service.location,
-        service: service.name,
-        role: "roles/run.invoker",
-        member: "allUsers",
-    });
-}
-
-export const serviceUrl = service?.statuses?.[0]?.url || "dummy";
+// Cloud Run サービスアカウントにCloud Storage権限を付与
+new gcp.storage.BucketIAMMember("cloudrun-storage-admin", {
+    bucket: imageBucket.name,
+    role: "roles/storage.objectAdmin",
+    member: pulumi.interpolate`serviceAccount:${cloudRunServiceAccount.email}`,
+}, { dependsOn: [imageBucket, cloudRunServiceAccount] });
