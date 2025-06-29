@@ -1,5 +1,7 @@
-import inspect
 import logging
+import json
+from google.adk.runners import Runner
+from google.adk.sessions import VertexAiSessionService
 
 # ログ設定
 logger = logging.getLogger(__name__)
@@ -44,60 +46,53 @@ async def _fetch_and_store_instagram_image(username: str) -> str:
         # フォールバック: デフォルト画像
         return f"gs://{settings.CLOUD_STORAGE_BUCKET}/images/default/photographer_placeholder.jpg"
 
-async def run_agent(prompt: str) -> str:
+
+async def run_agent(prompt: str, destination: str, language: str) -> str:
     logger.info("=== Starting run_agent ===")
     logger.info(f"Input prompt: {prompt[:200]}...")
     
     try:
-        # 直接ツールを呼び出すアプローチから開始（最も安全）
         logger.info("Trying direct tool call first...")
+        from app.agent.agent import search_photographer_on_instagram
+        
         try:
-            from app.agent.agent import search_photographer_on_instagram
-            logger.info("Successfully imported search_photographer_on_instagram")
-            
-            # プロンプトから検索パラメータを抽出（簡易版）
-            destination = "paris"  # デフォルト値
-            language = "english"   # デフォルト値
-            
-            # プロンプトから実際のパラメータを抽出してみる
-            prompt_lower = prompt.lower()
-            if "ロンドン" in prompt or "london" in prompt_lower:
-                destination = "london"
-            elif "東京" in prompt or "tokyo" in prompt_lower:
-                destination = "tokyo"
-            elif "ニューヨーク" in prompt or "new york" in prompt_lower:
-                destination = "new york"
-            elif "パリ" in prompt or "paris" in prompt_lower:
-                destination = "paris"
-                
-            if "japanese" in prompt_lower or "日本語" in prompt:
-                language = "japanese"
-            elif "english" in prompt_lower or "英語" in prompt:
-                language = "english"
-                
             logger.info(f"Extracted parameters: destination={destination}, language={language}")
             
             # ツールを直接呼び出し
             logger.info("Calling search_photographer_on_instagram directly...")
             tool_result = search_photographer_on_instagram(destination, language, prompt)
-            logger.info(f"Direct tool result: {tool_result}")
             
-            # ツール結果がプロンプト生成の場合、AIエージェントを呼び出す
             if isinstance(tool_result, dict) and tool_result.get('status') == 'search_needed':
                 logger.info("Tool returned search prompt, calling AI agent...")
                 
-                # AIエージェントを使って実際の検索を実行
                 from app.agent.agent import root_agent
                 
                 ai_prompt = tool_result['prompt']
-                logger.info(f"AI search prompt: {ai_prompt}")
-                
+                ai_response = ""
+
                 try:
+                    # https://google.github.io/adk-docs/api-reference/python/google-adk.html#module-google.adk.runners
                     # AIエージェントから写真家のユーザー名リストを取得
-                    ai_response = await root_agent.run_async(ai_prompt)
-                    photographer_usernames = []
                     
-                    # レスポンスを処理
+                    runner = Runner(
+                        agent=root_agent,
+                        app_name="photographer-search",
+                        session_service=VertexAiSessionService(
+                            "eternal-photon-292207",
+                            "asia-northeast1"
+                        )
+                    )
+                    ai_response = runner.run(
+                        user_id="user",
+                        session_id="session",
+                        new_message=ai_prompt
+                    )
+                except ImportError as adk_error:
+                    logger.error(f"ADK import error: {adk_error}")
+                    raise adk_error
+                
+                photographer_usernames = []
+                try:
                     if hasattr(ai_response, '__aiter__'):
                         async for chunk in ai_response:
                             if hasattr(chunk, 'content'):
@@ -123,7 +118,7 @@ async def run_agent(prompt: str) -> str:
                         except Exception as e:
                             logger.warning(f"Failed to fetch image for {username}: {e}")
                     
-                    import json
+                    
                     result_json = json.dumps({"images": results})
                     
                     logger.info(f"=== AI AGENT RESPONSE ===")
@@ -136,29 +131,17 @@ async def run_agent(prompt: str) -> str:
                     
                 except Exception as e:
                     logger.error(f"Error calling AI agent: {e}", exc_info=True)
-                    # フォールバック: 空の結果を返す
-                    import json
-                    return json.dumps({"images": []})
+                    raise e
             
             else:
                 logger.warning("Tool result is not in expected format, returning empty result")
                 logger.warning(f"Unexpected tool result: {tool_result}")
-                import json
-                return json.dumps({
-                    "images": []
-                })
+                raise e_direct
                 
         except Exception as e_direct:
             logger.error(f"Direct tool call failed: {e_direct}", exc_info=True)
-            
-            # 従来のエージェント呼び出しは当面スキップ
-            logger.warning("Skipping agent calls due to context issues, returning empty result")
-            import json
-            return json.dumps({
-                "images": []
-            })
+            raise e_direct
                 
     except Exception as e:
         logger.error(f"Error in run_agent: {e}", exc_info=True)
-        import json
-        return json.dumps({"images": []})
+        raise e 

@@ -1,5 +1,6 @@
 import { USE_MOCK_ONLY, API_ENDPOINT_URL } from "@env";
 import * as ImagePicker from 'expo-image-picker';
+import * as FileSystem from 'expo-file-system';
 import {
     Camera,
     Instagram,
@@ -95,6 +96,33 @@ const LANGUAGE_OPTIONS = [
     { label: "English", value: "english" },
 ];
 
+// 画像をBase64に変換する関数
+const convertImageToBase64 = async (imageUri) => {
+    try {
+        if (Platform.OS === 'web') {
+            // Web環境の場合はfetchを使用してBlobを取得し、Base64に変換
+            const response = await fetch(imageUri);
+            const blob = await response.blob();
+            
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = () => resolve(reader.result);
+                reader.onerror = reject;
+                reader.readAsDataURL(blob);
+            });
+        } else {
+            // ネイティブ環境の場合はFileSystemを使用
+            const base64 = await FileSystem.readAsStringAsync(imageUri, {
+                encoding: FileSystem.EncodingType.Base64,
+            });
+            return `data:image/jpeg;base64,${base64}`;
+        }
+    } catch (error) {
+        console.error('Error converting image to base64:', error);
+        throw error;
+    }
+};
+
 export default function BeforeTheHoneymoon() {
     const [destination, setDestination] = useState("");
     const [preferredLanguage, setPreferredLanguage] = useState("");
@@ -137,9 +165,19 @@ export default function BeforeTheHoneymoon() {
         setIsSearching(true);
         setError(null);
 
+        // デバッグ情報をコンソールに出力
+        console.log("=== DEBUG INFO ===");
+        console.log("USE_MOCK_ONLY:", USE_MOCK_ONLY);
+        console.log("useMock:", useMock);
+        console.log("API_URL:", API_URL);
+        console.log("destination:", destination);
+        console.log("preferredLanguage:", preferredLanguage);
+        console.log("uploadedImage:", uploadedImage ? "present" : "missing");
+
         try {
             // モック専用モードの場合
             if (useMock) {
+                console.log("Using mock mode - not calling real API");
                 // モック用の遅延
                 await new Promise(resolve => setTimeout(resolve, 1500));
                 setSearchResults(MOCK_RESPONSE.images);
@@ -150,13 +188,20 @@ export default function BeforeTheHoneymoon() {
                 return;
             }
 
+            console.log("Making real API call to:", `${API_URL}/searchPhotographers`);
+
+            // 画像をBase64エンコード
+            const base64Image = await convertImageToBase64(uploadedImage);
+            
             // Cloud Run API に送信するデータ
             const requestData = {
                 destination: destination,
                 preferredLanguage: preferredLanguage,
-                referenceImage: uploadedImage,
+                referenceImage: base64Image,
             };
 
+            console.log("Request data:", requestData);
+            
             const response = await fetch(`${API_URL}/searchPhotographers`, {
                 method: "POST",
                 headers: {
@@ -165,11 +210,17 @@ export default function BeforeTheHoneymoon() {
                 body: JSON.stringify(requestData),
             });
 
+            console.log("Response status:", response.status);
+            console.log("Response headers:", response.headers);
+
             if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
+                const errorText = await response.text();
+                console.log("Error response:", errorText);
+                throw new Error(`HTTP error! status: ${response.status}, body: ${errorText}`);
             }
 
             const result = await response.json();
+            console.log("API Response:", result);
 
             // 結果が期待される形式かチェック
             if (result && result.images && Array.isArray(result.images)) {
@@ -179,10 +230,11 @@ export default function BeforeTheHoneymoon() {
             }
         } catch (error) {
             console.error("Search error:", error);
-            setError("検索中にエラーが発生しました。もう一度お試しください。");
+            console.error("Error details:", error.message);
+            setError(`検索中にエラーが発生しました: ${error.message}`);
             Alert.alert(
                 "エラー",
-                "フォトグラファーの検索中にエラーが発生しました。",
+                `フォトグラファーの検索中にエラーが発生しました: ${error.message}`,
             );
         } finally {
             setIsSearching(false);

@@ -14,19 +14,10 @@ def search_photographer_on_instagram(destination: str, language: str = "english"
         dict: Search results with photographer information
     """
     
-    # AIエージェントに検索を依頼するプロンプトを作成
-    search_prompt = f"""
-    Find photographers in {destination} who can communicate in {language}.
-    Style requirements: {style_description}
+    from app.prompts import get_photographer_search_prompt
     
-    Please provide a list of Instagram photographers who:
-    1. Are based in or frequently work in {destination}
-    2. Can communicate in {language}
-    3. Match the photography style described
-    
-    Return exactly 3-6 photographer Instagram usernames (without @) that I can search for.
-    Format as a simple list of usernames only.
-    """
+    # プロンプトファイルから検索プロンプトを取得
+    search_prompt = get_photographer_search_prompt(destination, language, style_description)
     
     # この関数は現在直接的な結果を返すため、
     # 実際のAI呼び出しは上位レイヤーで処理される
@@ -48,16 +39,9 @@ def analyze_image_style(image_url: str) -> str:
         str: Instructions for analyzing the image
     """
     
-    return f"""Please analyze the photography style of the image at: {image_url}
-
-Look at the following aspects:
-1. Composition and framing
-2. Lighting style (natural, studio, dramatic, etc.)
-3. Color palette and mood
-4. Subject matter and pose
-5. Overall aesthetic and style
-
-Based on your analysis, describe the photography style in a few descriptive words that would help match similar photographers."""
+    from app.prompts import get_image_analysis_prompt
+    
+    return get_image_analysis_prompt(image_url)
 
 # Define the agent with the name "root_agent" (required by ADK)
 root_agent = Agent(

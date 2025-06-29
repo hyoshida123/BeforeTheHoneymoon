@@ -1,7 +1,7 @@
 import logging
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
-# from google.adk.cli.fast_api import get_fast_api_app
+from google.adk.cli.fast_api import get_fast_api_app
 
 from app.config import settings
 from app.models import SearchRequest, SearchResponse
@@ -14,18 +14,11 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
-# app = FastAPI(
-#     title=settings.API_TITLE,
-#     description=settings.API_DESCRIPTION,
-#     version=settings.API_VERSION
-# )
-
-# ADKの初期化を一時的にスキップして通常のFastAPIアプリを使用
-logger.info("Initializing standard FastAPI app...")
-app = FastAPI(
-    title=settings.API_TITLE,
-    description=settings.API_DESCRIPTION,
-    version=settings.API_VERSION
+logger.info("Initializing FastAPI app with ADK...")
+app = get_fast_api_app(
+    agents_dir=settings.AGENT_DIR,
+    allow_origins=settings.ALLOWED_ORIGINS,
+    web=True,
 )
 logger.info("FastAPI app initialized successfully")
 
@@ -39,9 +32,7 @@ app.add_middleware(
 )
 
 # サービス初期化
-logger.info("Initializing PhotographerSearchService...")
-search_service = PhotographerSearchService()
-logger.info("PhotographerSearchService initialized")
+logger.info("PhotographerSearchService functions ready...")
 
 
 @app.get("/")
@@ -89,14 +80,9 @@ async def test_agent():
         test_prompt = "Hello, can you respond with a simple JSON like {\"status\": \"ok\", \"message\": \"Agent is working\"}?"
         logger.info(f"Test prompt: {test_prompt}")
         
-        response = await run_agent(test_prompt)
+        response = await run_agent(test_prompt, "Tokyo", "ja")
         logger.info(f"Test agent response type: {type(response)}")
         logger.info(f"Test agent response: {response}")
-        
-        # レスポンスがasync generatorの場合の処理
-        if hasattr(response, '__aiter__'):
-            logger.warning("Response is still an async generator, this should not happen")
-            response = str(response)
         
         return {
             "status": "success",
@@ -144,7 +130,8 @@ async def search_photographers(request: SearchRequest):
         
         # 検索サービス呼び出し
         logger.info("Calling search service...")
-        results = await search_service.search_photographers(request)
+        service = PhotographerSearchService()
+        results = await service.search_photographers(request)
         logger.info(f"Search service returned {len(results)} results")
         
         response = SearchResponse(images=results)
@@ -174,14 +161,10 @@ async def search_photographers(request: SearchRequest):
         )
 
 
-# Cloud Functions用のエントリーポイント
 def main(request=None):
-    """Cloud Functions用のメイン関数"""
     import uvicorn
     
     if request:
-        # Cloud Functionsで実行される場合
-        logger.info("Running in Cloud Functions mode")
         return app
     else:
         # ローカル開発用

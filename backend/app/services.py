@@ -2,6 +2,9 @@ import base64
 import uuid
 from typing import List
 import logging
+import requests
+import datetime
+import json
 
 from google.cloud import storage
 from app.models import ImageResult, SearchRequest
@@ -53,7 +56,7 @@ class PhotographerSearchService:
             
             # AI Agentに検索を依頼
             logger.info("Step 3: Calling AI agent")
-            agent_response = await self._prompt_agent(search_prompt)
+            agent_response = await self._prompt_agent(search_prompt, request.destination, request.preferred_language)
             logger.info(f"Agent response received: {agent_response[:200] if agent_response else 'None'}...")
             
             # 3. 結果をパースして返す
@@ -118,7 +121,7 @@ class PhotographerSearchService:
             logger.error(f"Error uploading image: {e}", exc_info=True)
             raise Exception(f"Failed to upload image: {e}")
     
-    async def _prompt_agent(self, prompt: str) -> str:
+    async def _prompt_agent(self, prompt: str, destination: str, language: str) -> str:
         """AI Agentにプロンプトを送信して結果を取得する
         
         Args:
@@ -132,10 +135,10 @@ class PhotographerSearchService:
         
         try:
             # エージェントラッパーを使用
-            from app.agent.utils import run_agent
+            from app.utils import run_agent
             
             logger.info("Calling run_agent function")
-            response = await run_agent(prompt)
+            response = await run_agent(prompt, destination, language)
             logger.info(f"Agent response received: {response[:200] if response else 'None'}...")
             
             return response

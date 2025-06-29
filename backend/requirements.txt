@@ -1,16 +1,11 @@
-# Backend dependencies for Before the Honeymoon API
-# Generated from pyproject.toml for compatibility
-
 fastapi
 uvicorn[standard]
 pydantic
 functions-framework
-google-adk>=1.3.0
-google-cloud-storage
-pillow
-aiofiles
-requests
-
-# Development dependencies (optional)
-# pytest
-# httpx  # for testing FastAPI
+google-adk>=1.5.0
+google-cloud-storage>=2.19.0
+pillow>=11.2.1
+aiofiles>=24.1.0
+requests>=2.32.4
+python-dotenv>=1.1.0
+google-generativeai>=0.8.5 
