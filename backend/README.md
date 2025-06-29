@@ -128,6 +128,3 @@ curl -X POST http://127.0.0.1:8000/searchPhotographers \
 - AI エージェントのレスポンス
 - 写真家検索結果
 - API リクエスト/レスポンス詳細
-
-
-AIzaSyDUZIILYHcfPy1A-zuqg_hI5xLNdM77_LI
