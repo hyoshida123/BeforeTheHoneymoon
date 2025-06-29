@@ -25,14 +25,7 @@ class Settings:
     # サポート言語
     SUPPORTED_LANGUAGES: List[str] = [
         "japanese",
-        "english", 
-        "korean",
-        "chinese",
-        "french",
-        "spanish",
-        "german",
-        "italian",
-        "portuguese"
+        "english"
     ]
     
     # 画像設定

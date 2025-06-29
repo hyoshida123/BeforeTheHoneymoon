@@ -16,7 +16,6 @@ class ImageResult(BaseModel):
     """検索結果の画像情報"""
     
     model_config = ConfigDict(populate_by_name=True)
-    status_code: int
     image_url: HttpUrl = Field(alias="imageUrl")
     instagram_url: HttpUrl = Field(alias="instagramUrl")
 
@@ -24,5 +23,4 @@ class ImageResult(BaseModel):
 class SearchResponse(BaseModel):
     """フォトグラファー検索レスポンスモデル"""
     
-    status_code: int
     images: List[ImageResult]

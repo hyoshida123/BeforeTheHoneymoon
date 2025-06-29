@@ -18,6 +18,12 @@ const enableRunAPI = new gcp.projects.Service("run-api", {
 const enableStorageAPI = new gcp.projects.Service("storage-api", {
     service: "storage.googleapis.com",
 });
+const enableAIPlatformAPI = new gcp.projects.Service("aiplatform-api", {
+    service: "aiplatform.googleapis.com",
+});
+const enableMLAPI = new gcp.projects.Service("ml-api", {
+    service: "ml.googleapis.com",
+});
 
 // リポジトリの作成
 const repoName = `${resourcePrefix}-repo`;
@@ -85,3 +91,24 @@ new gcp.storage.BucketIAMMember("cloudrun-storage-admin", {
     role: "roles/storage.objectAdmin",
     member: pulumi.interpolate`serviceAccount:${cloudRunServiceAccount.email}`,
 }, { dependsOn: [imageBucket, cloudRunServiceAccount] });
+
+// Cloud Run サービスアカウントにAI Platform権限を付与（Gemini API使用のため）
+new gcp.projects.IAMMember("cloudrun-aiplatform-user", {
+    project: project,
+    role: "roles/aiplatform.user",
+    member: pulumi.interpolate`serviceAccount:${cloudRunServiceAccount.email}`,
+}, { dependsOn: [cloudRunServiceAccount, enableAIPlatformAPI] });
+
+// Cloud Run サービスアカウントにML Developer権限を付与（AI/MLサービス使用のため）
+new gcp.projects.IAMMember("cloudrun-ml-developer", {
+    project: project,
+    role: "roles/ml.developer", 
+    member: pulumi.interpolate`serviceAccount:${cloudRunServiceAccount.email}`,
+}, { dependsOn: [cloudRunServiceAccount, enableMLAPI] });
+
+// Cloud Run サービスアカウントにStorage Object Admin権限を付与（プロジェクトレベル）
+new gcp.projects.IAMMember("cloudrun-storage-admin-project", {
+    project: project,
+    role: "roles/storage.objectAdmin",
+    member: pulumi.interpolate`serviceAccount:${cloudRunServiceAccount.email}`,
+}, { dependsOn: [cloudRunServiceAccount, enableStorageAPI] });

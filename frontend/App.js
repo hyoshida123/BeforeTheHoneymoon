@@ -93,13 +93,6 @@ const LANGUAGE_OPTIONS = [
     { label: "言語を選択してください", value: "" },
     { label: "日本語", value: "japanese" },
     { label: "English", value: "english" },
-    { label: "한국어", value: "korean" },
-    { label: "中文", value: "chinese" },
-    { label: "Français", value: "french" },
-    { label: "Español", value: "spanish" },
-    { label: "Deutsch", value: "german" },
-    { label: "Italiano", value: "italian" },
-    { label: "Português", value: "portuguese" },
 ];
 
 export default function BeforeTheHoneymoon() {
