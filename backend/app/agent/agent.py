@@ -1,5 +1,5 @@
 from google.adk.agents import Agent
-from google.adk.sessions import VertexAiSessionService
+from google.adk.sessions import InMemorySessionService
 from google.adk.runners import Runner
 from google.genai import types
 
@@ -8,6 +8,8 @@ from vertexai import agent_engines
 
 import uuid
 from pydantic import Field
+
+import asyncio
 
 from app.config import settings
 
@@ -53,7 +55,7 @@ def analyze_image_style(image_url: str) -> str:
 # Define the agent with the name "root_agent" (required by ADK)
 root_agent = Agent(
     name="photographer_search_agent",
-    model="gemini-2.5-flash", 
+    model="gemini-2.0-flash-thinking-exp-01-21", 
     description="AI agent that helps find photographers for destination photography based on style preferences, location, and language requirements.",
     instruction="""You are a helpful photography assistant that specializes in finding photographers for destination shoots.
     
@@ -73,29 +75,39 @@ root_agent = Agent(
 )
 
 # Vertex AI Agent Engine
-agent_engine = agent_engines.create()
-app_name = agent_engine.name.split("/")[-1]
+# agent_engine = agent_engines.create()
+# app_name = agent_engine.name.split("/")[-1]
 
 # Session and Runner
-session_service = VertexAiSessionService(
-    "eternal-photon-292207",
-    "us-central1"
-)
+session_service = InMemorySessionService()
+
 runner = Runner(
     agent=root_agent,
-    app_name=app_name,
+    app_name="photographer-search",
     session_service=session_service
 )
 
-# Agent Interaction
-def call_agent(query):
-  user_id: str = Field(default_factory=lambda: str(uuid.uuid4()))
-  session_id: str = Field(default_factory=lambda: str(uuid.uuid4()))
-  content = types.Content(role='user', parts=[types.Part(text=query)])
-  events = runner.run(
-      user_id=user_id, session_id=session_id, new_message=content)
+async def setup_session(app_name, user_id, session_id):
+    session = await session_service.create_session(
+        app_name=app_name,
+        user_id=user_id,
+        session_id=session_id,
+    )
+    return session
 
-  for event in events:
-      if event.is_final_response():
-          final_response = event.content.parts[0].text
-          print("Agent Response: ", final_response)
+# Agent Interaction
+async def call_agent(query):
+    # await でセッションを作成
+    await setup_session(app_name="photographer-search", user_id="user", session_id="session")
+
+    content = types.Content(role='user', parts=[types.Part(text=query)])
+    
+    # runner.run() は同期関数なので OK
+    events = runner.run(
+        user_id="user", session_id="session", new_message=content)
+
+    for event in events:
+        if event.is_final_response():
+            final_response = event.content.parts[0].text
+            print("Agent Response: ", final_response)
+            return final_response

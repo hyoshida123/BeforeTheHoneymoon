@@ -10,3 +10,4 @@ requests>=2.32.4
 python-dotenv>=1.1.0
 google-generativeai>=0.8.5 
 uuid>=1.30
+asyncio>=3.4.3

@@ -1,8 +1,6 @@
 import logging
 import json
 from google.adk.runners import Runner
-from google.adk.sessions import VertexAiSessionService
-from google.genai import types
 
 # ログ設定
 logger = logging.getLogger(__name__)
@@ -23,7 +21,7 @@ async def _fetch_and_store_instagram_image(username: str) -> str:
         
         # Instagram公開プロフィール画像を取得（簡易版）
         # 実際の実装ではInstagram Graph APIまたはスクレイピングライブラリを使用
-        # ここではプレースホルダー画像を使用
+        # TODO: 実装できてない
         placeholder_url = f"https://via.placeholder.com/400x400/0066cc/ffffff?text={username[:3].upper()}"
         
         response = requests.get(placeholder_url, timeout=10)
@@ -71,7 +69,7 @@ async def run_agent(prompt: str, destination: str, language: str) -> str:
 
                 try:
                     from app.agent.agent import call_agent
-                    ai_response = call_agent(ai_prompt)
+                    ai_response = await call_agent(ai_prompt)
 
                     # TODO: 確認
                     print("--------------------------------")
