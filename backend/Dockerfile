@@ -15,6 +15,11 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 COPY app/ ./app/
 
+ENV GOOGLE_GENAI_USE_VERTEXAI="True"
+ENV GOOGLE_CLOUD_PROJECT="eternal-photon-292207"
+ENV GOOGLE_CLOUD_LOCATION="us-central1"
+ENV GOOGLE_GENAI_MODEL="gemini-2.5-flash"
+
 # ポート8080を公開（Cloud Runのデフォルト）
 EXPOSE 8080
 

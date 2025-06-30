@@ -31,9 +31,10 @@ update-frontend-env:
 
 frontend-deploy:
     cd frontend && \
-    pnpm i && \
-    pnpm build && \
-    gsutil -m cp -r dist/* gs://bth-dev-hosting/
+    pnpm install && \
+    npx expo export --platform web && \
+    gsutil -m cp -r dist/* gs://bth-dev-hosting/ && \
+    gsutil iam ch allUsers:objectViewer gs://bth-dev-hosting
 
 deploy-all:
     just backend-deploy

@@ -4,4 +4,10 @@ from app.models import SearchRequest, SearchResponse
 from app.services import PhotographerSearchService
 
 
-__all__ = ["app", "settings", "SearchRequest", "SearchResponse", "PhotographerSearchService"]
+__all__ = [
+    "app",
+    "settings",
+    "SearchRequest",
+    "SearchResponse",
+    "PhotographerSearchService",
+]

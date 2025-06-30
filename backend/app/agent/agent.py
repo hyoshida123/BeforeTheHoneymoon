@@ -13,49 +13,56 @@ import asyncio
 
 from app.config import settings
 
-def search_photographer_on_instagram(destination: str, language: str = "english", style_description: str = "") -> dict:
+
+def search_photographer_on_instagram(
+    destination: str, language: str = "english", style_description: str = ""
+) -> dict:
     """Search for photographers in a specific destination with language and style preferences.
-    
+
     Args:
         destination: Target destination for photography
         language: Preferred communication language
         style_description: Description of desired photography style
-    
+
     Returns:
         dict: Search results with photographer information
     """
-    
+
     from app.prompts import get_photographer_search_prompt
-    
+
     # プロンプトファイルから検索プロンプトを取得
-    search_prompt = get_photographer_search_prompt(destination, language, style_description)
-    
+    search_prompt = get_photographer_search_prompt(
+        destination, language, style_description
+    )
+
     return {
         "status": "search_needed",
         "prompt": search_prompt,
         "destination": destination,
         "language": language,
-        "style_description": style_description
+        "style_description": style_description,
     }
+
 
 def analyze_image_style(image_url: str) -> str:
     """Analyze uploaded image to determine photography style.
-    
+
     Args:
         image_url: URL of the uploaded reference image
-    
+
     Returns:
         str: Instructions for analyzing the image
     """
-    
+
     from app.prompts import get_image_analysis_prompt
-    
+
     return get_image_analysis_prompt(image_url)
+
 
 # Define the agent with the name "root_agent" (required by ADK)
 root_agent = Agent(
     name="photographer_search_agent",
-    model="gemini-2.0-flash-thinking-exp-01-21", 
+    model="gemini-2.5-flash",
     description="AI agent that helps find photographers for destination photography based on style preferences, location, and language requirements.",
     instruction="""You are a helpful photography assistant that specializes in finding photographers for destination shoots.
     
@@ -82,10 +89,9 @@ root_agent = Agent(
 session_service = InMemorySessionService()
 
 runner = Runner(
-    agent=root_agent,
-    app_name="photographer-search",
-    session_service=session_service
+    agent=root_agent, app_name="photographer-search", session_service=session_service
 )
+
 
 async def setup_session(app_name, user_id, session_id):
     session = await session_service.create_session(
@@ -95,16 +101,18 @@ async def setup_session(app_name, user_id, session_id):
     )
     return session
 
+
 # Agent Interaction
 async def call_agent(query):
     # await でセッションを作成
-    await setup_session(app_name="photographer-search", user_id="user", session_id="session")
+    await setup_session(
+        app_name="photographer-search", user_id="user", session_id="session"
+    )
 
-    content = types.Content(role='user', parts=[types.Part(text=query)])
-    
+    content = types.Content(role="user", parts=[types.Part(text=query)])
+
     # runner.run() は同期関数なので OK
-    events = runner.run(
-        user_id="user", session_id="session", new_message=content)
+    events = runner.run(user_id="user", session_id="session", new_message=content)
 
     for event in events:
         if event.is_final_response():

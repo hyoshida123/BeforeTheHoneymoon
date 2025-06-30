@@ -2,49 +2,57 @@
 AIエージェント用プロンプトテンプレート
 """
 
-def get_photographer_search_prompt(destination: str, language: str, style_description: str = "") -> str:
+
+def get_photographer_search_prompt(
+    destination: str, language: str, style_description: str = ""
+) -> str:
     """写真家検索用プロンプトを生成する
-    
+
     Args:
         destination: 撮影地
         language: 対応言語
         style_description: スタイル説明
-        
+
     Returns:
         str: AIエージェント用プロンプト
     """
-    
+
     base_prompt = f"""
     Find photographers in {destination} who can communicate in {language}.
     Style requirements: {style_description}
-    
-    Please provide a list of Instagram photographers who:
+
+    Your job is to return a list of Instagram usernames that meet the following criteria:
     1. Are based in or frequently work in {destination}
     2. Can communicate in {language}
     3. Match the photography style described
-    
-    Return exactly 3-9 photographer Instagram usernames (without @) that I can search for.
-    Format as a simple list of usernames only, one per line.
-    
-    Example format:
-    photographer1
-    photographer2
-    photographer3
+
+    ⚠️ Important instructions:
+    - DO NOT add any explanation or commentary.
+    - DO NOT include @ symbols.
+    - DO NOT include headings like "Here are some photographers:"
+    - Return ONLY the usernames, exactly 3 to 9 of them.
+    - Each username must appear on its own line, like this:
+
+    user001  
+    user002  
+    user003
+
+    This format is required for automatic processing. Please follow it exactly.
     """
-    
+
     return base_prompt.strip()
 
 
 def get_image_analysis_prompt(image_url: str) -> str:
     """画像分析用プロンプトを生成する
-    
+
     Args:
         image_url: 分析対象の画像URL
-        
+
     Returns:
         str: 画像分析用プロンプト
     """
-    
+
     prompt = f"""
     Please analyze the photography style of the image at: {image_url}
 
@@ -57,22 +65,22 @@ def get_image_analysis_prompt(image_url: str) -> str:
 
     Based on your analysis, describe the photography style in a few descriptive words that would help match similar photographers.
     """
-    
+
     return prompt.strip()
 
 
 def get_service_search_prompt(destination: str, language: str, image_url: str) -> str:
     """サービス層で使用する検索プロンプトを生成する
-    
+
     Args:
         destination: 撮影地
         language: 対応言語
         image_url: 参考画像URL
-        
+
     Returns:
         str: 検索用プロンプト
     """
-    
+
     prompt = f"""
     Please help me find photographers in {destination} who can communicate in {language}.
     I have uploaded a reference image at {image_url} that shows the style I'm looking for.
@@ -85,5 +93,5 @@ def get_service_search_prompt(destination: str, language: str, image_url: str) -
     
     Format the response as a JSON array of objects with 'imageUrl' and 'instagramUrl' fields.
     """
-    
+
     return prompt.strip()

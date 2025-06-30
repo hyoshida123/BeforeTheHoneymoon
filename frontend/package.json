@@ -27,6 +27,7 @@
     },
     "devDependencies": {
         "@babel/core": "^7.20.0",
+        "@expo/webpack-config": "^19.0.1",
         "dprint": "^0.50.0"
     },
     "private": true,
