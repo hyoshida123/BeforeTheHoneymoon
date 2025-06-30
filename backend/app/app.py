@@ -74,7 +74,7 @@ async def test_agent():
     """エージェントのテスト用エンドポイント"""
     logger.info("Test agent endpoint called")
     try:
-        from app.agent.utils import run_agent
+        from app.utils import run_agent
         
         # シンプルなテストプロンプト
         test_prompt = "Hello, can you respond with a simple JSON like {\"status\": \"ok\", \"message\": \"Agent is working\"}?"

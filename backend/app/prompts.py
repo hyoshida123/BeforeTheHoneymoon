@@ -23,7 +23,7 @@ def get_photographer_search_prompt(destination: str, language: str, style_descri
     2. Can communicate in {language}
     3. Match the photography style described
     
-    Return exactly 3-6 photographer Instagram usernames (without @) that I can search for.
+    Return exactly 3-9 photographer Instagram usernames (without @) that I can search for.
     Format as a simple list of usernames only, one per line.
     
     Example format:

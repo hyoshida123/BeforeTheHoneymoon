@@ -2,6 +2,7 @@ import logging
 import json
 from google.adk.runners import Runner
 from google.adk.sessions import VertexAiSessionService
+from google.genai import types
 
 # ログ設定
 logger = logging.getLogger(__name__)
@@ -65,28 +66,17 @@ async def run_agent(prompt: str, destination: str, language: str) -> str:
             if isinstance(tool_result, dict) and tool_result.get('status') == 'search_needed':
                 logger.info("Tool returned search prompt, calling AI agent...")
                 
-                from app.agent.agent import root_agent
-                
                 ai_prompt = tool_result['prompt']
                 ai_response = ""
 
                 try:
-                    # https://google.github.io/adk-docs/api-reference/python/google-adk.html#module-google.adk.runners
-                    # AIエージェントから写真家のユーザー名リストを取得
-                    
-                    runner = Runner(
-                        agent=root_agent,
-                        app_name="photographer-search",
-                        session_service=VertexAiSessionService(
-                            "eternal-photon-292207",
-                            "asia-northeast1"
-                        )
-                    )
-                    ai_response = runner.run(
-                        user_id="user",
-                        session_id="session",
-                        new_message=ai_prompt
-                    )
+                    from app.agent.agent import call_agent
+                    ai_response = call_agent(ai_prompt)
+
+                    # TODO: 確認
+                    print("--------------------------------")
+                    print(ai_response)
+                    print("--------------------------------")
                 except ImportError as adk_error:
                     logger.error(f"ADK import error: {adk_error}")
                     raise adk_error

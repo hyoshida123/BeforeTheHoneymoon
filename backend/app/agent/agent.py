@@ -1,4 +1,13 @@
 from google.adk.agents import Agent
+from google.adk.sessions import VertexAiSessionService
+from google.adk.runners import Runner
+from google.genai import types
+
+import vertexai
+from vertexai import agent_engines
+
+import uuid
+from pydantic import Field
 
 from app.config import settings
 
@@ -19,8 +28,6 @@ def search_photographer_on_instagram(destination: str, language: str = "english"
     # プロンプトファイルから検索プロンプトを取得
     search_prompt = get_photographer_search_prompt(destination, language, style_description)
     
-    # この関数は現在直接的な結果を返すため、
-    # 実際のAI呼び出しは上位レイヤーで処理される
     return {
         "status": "search_needed",
         "prompt": search_prompt,
@@ -64,3 +71,31 @@ root_agent = Agent(
     Always respond with helpful, accurate information and provide Instagram URLs for photographer discovery.""",
     tools=[search_photographer_on_instagram, analyze_image_style],
 )
+
+# Vertex AI Agent Engine
+agent_engine = agent_engines.create()
+app_name = agent_engine.name.split("/")[-1]
+
+# Session and Runner
+session_service = VertexAiSessionService(
+    "eternal-photon-292207",
+    "us-central1"
+)
+runner = Runner(
+    agent=root_agent,
+    app_name=app_name,
+    session_service=session_service
+)
+
+# Agent Interaction
+def call_agent(query):
+  user_id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+  session_id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+  content = types.Content(role='user', parts=[types.Part(text=query)])
+  events = runner.run(
+      user_id=user_id, session_id=session_id, new_message=content)
+
+  for event in events:
+      if event.is_final_response():
+          final_response = event.content.parts[0].text
+          print("Agent Response: ", final_response)
